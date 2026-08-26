@@ -1,6 +1,29 @@
-# student_life
+# Student Life Hub
 
-A new Flutter project.
+A Flutter starter app for students. It currently opens on a welcome page and
+uses Material named routes without GetX or external state-management packages.
+
+## Run locally
+
+```bash
+flutter pub get
+flutter run
+```
+
+Run the automated checks with:
+
+```bash
+flutter test
+```
+
+## Structure
+
+```text
+lib/
+  main.dart                 # App theme and named-route configuration
+  routes/app_routes.dart    # Route names and route map
+  screens/welcome_page.dart # First page
+```
 
 ## Getting Started
 

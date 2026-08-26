@@ -1,11 +1,11 @@
 {
-    "name": "student_life",
-    "short_name": "student_life",
+    "name": "Student Life Hub",
+    "short_name": "Student Life",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#5B5CE2",
+    "description": "Student Life Hub productivity app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
