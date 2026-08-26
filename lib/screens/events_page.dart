@@ -17,33 +17,38 @@ class EventsPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add campus event'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: title,
-              decoration: const InputDecoration(labelText: 'Event name'),
-            ),
-            TextField(
-              controller: date,
-              decoration: const InputDecoration(labelText: 'Date and time'),
-            ),
-            TextField(
-              controller: place,
-              decoration: const InputDecoration(labelText: 'Location'),
-            ),
-            TextField(
-              controller: club,
-              decoration: const InputDecoration(labelText: 'Organizer'),
-            ),
-            TextField(
-              controller: description,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: title,
+                decoration: const InputDecoration(labelText: 'Event name'),
               ),
-            ),
-          ],
+              TextField(
+                controller: date,
+                decoration: const InputDecoration(labelText: 'Date and time'),
+              ),
+              TextField(
+                controller: place,
+                decoration: const InputDecoration(labelText: 'Location'),
+              ),
+              TextField(
+                controller: club,
+                decoration: const InputDecoration(labelText: 'Organizer'),
+              ),
+              TextField(
+                controller: description,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

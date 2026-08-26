@@ -58,64 +58,72 @@ class _TasksPageState extends State<TasksPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Add assignment or exam'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: title,
-                decoration: const InputDecoration(labelText: 'Title'),
-              ),
-              TextField(
-                controller: category,
-                decoration: const InputDecoration(
-                  labelText: 'Course or category (optional)',
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: title,
+                  decoration: const InputDecoration(labelText: 'Title'),
                 ),
-              ),
-              TextField(
-                controller: notes,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
+                TextField(
+                  controller: category,
+                  decoration: const InputDecoration(
+                    labelText: 'Course or category (optional)',
+                  ),
                 ),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('This is an exam'),
-                value: isExam,
-                onChanged: (value) => setDialogState(() => isExam = value),
-              ),
-              DropdownButtonFormField<TaskPriority>(
-                initialValue: priority,
-                decoration: const InputDecoration(labelText: 'Priority'),
-                items: TaskPriority.values
-                    .map(
-                      (value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(_priorityLabel(value)),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) setDialogState(() => priority = value);
-                },
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Due date'),
-                subtitle: Text(dateText(dueDate)),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: dueDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2035),
-                  );
-                  if (picked != null) {
-                    setDialogState(() => dueDate = picked);
-                  }
-                },
-              ),
-            ],
+                TextField(
+                  controller: notes,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes (optional)',
+                  ),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('This is an exam'),
+                  value: isExam,
+                  onChanged: (value) => setDialogState(() => isExam = value),
+                ),
+                DropdownButtonFormField<TaskPriority>(
+                  initialValue: priority,
+                  decoration: const InputDecoration(labelText: 'Priority'),
+                  items: TaskPriority.values
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(_priorityLabel(value)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => priority = value);
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Due date'),
+                  subtitle: Text(dateText(dueDate)),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: dueDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2035),
+                    );
+                    if (picked != null) {
+                      setDialogState(() => dueDate = picked);
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

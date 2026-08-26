@@ -18,51 +18,58 @@ class ExpensesPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add expense'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: title,
-              decoration: const InputDecoration(labelText: 'Description'),
-            ),
-            TextField(
-              controller: amount,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: title,
+                decoration: const InputDecoration(labelText: 'Description'),
               ),
-              decoration: const InputDecoration(labelText: 'Amount (USD)'),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: category,
-              decoration: const InputDecoration(labelText: 'Category'),
-              items: const ['Food', 'Transport', 'Study', 'Housing', 'Other']
-                  .map(
-                    (value) =>
-                        DropdownMenuItem(value: value, child: Text(value)),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) category = value;
-              },
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: paymentMethod,
-              decoration: const InputDecoration(labelText: 'Payment method'),
-              items: const ['Cash', 'Card', 'Transfer', 'Other']
-                  .map(
-                    (value) =>
-                        DropdownMenuItem(value: value, child: Text(value)),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) paymentMethod = value;
-              },
-            ),
-            TextField(
-              controller: notes,
-              decoration: const InputDecoration(labelText: 'Notes (optional)'),
-            ),
-          ],
+              TextField(
+                controller: amount,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: 'Amount (USD)'),
+              ),
+              DropdownButtonFormField<String>(
+                initialValue: category,
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: const ['Food', 'Transport', 'Study', 'Housing', 'Other']
+                    .map(
+                      (value) =>
+                          DropdownMenuItem(value: value, child: Text(value)),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) category = value;
+                },
+              ),
+              DropdownButtonFormField<String>(
+                initialValue: paymentMethod,
+                decoration: const InputDecoration(labelText: 'Payment method'),
+                items: const ['Cash', 'Card', 'Transfer', 'Other']
+                    .map(
+                      (value) =>
+                          DropdownMenuItem(value: value, child: Text(value)),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) paymentMethod = value;
+                },
+              ),
+              TextField(
+                controller: notes,
+                decoration: const InputDecoration(
+                  labelText: 'Notes (optional)',
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
