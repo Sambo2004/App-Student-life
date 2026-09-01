@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/app_settings.dart';
 import '../data/student_store.dart';
 import '../routes/app_routes.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/analytics_dashboard.dart';
 import '../widgets/page_header.dart';
 import '../widgets/routine_chart.dart';
 
@@ -17,6 +19,9 @@ class HomePage extends StatelessWidget {
       animation: StudentStore.instance,
       builder: (context, _) {
         final store = StudentStore.instance;
+        final openTasks = store.tasks.where((task) => !task.done).toList()
+          ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+        final focusTask = openTasks.isEmpty ? null : openTasks.first;
         return AnimatedBuilder(
           animation: AppSettings.instance,
           builder: (context, _) => ListView(
@@ -36,15 +41,29 @@ class HomePage extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
-                      child: CircleAvatar(
-                        radius: 28,
-                        backgroundImage:
-                            AppSettings.instance.profileImage == null
-                            ? null
-                            : MemoryImage(AppSettings.instance.profileImage!),
-                        child: AppSettings.instance.profileImage == null
-                            ? const Icon(Icons.person, size: 28)
-                            : null,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'Search your student life',
+                            onPressed: () => showSearch<void>(
+                              context: context,
+                              delegate: _StudentSearchDelegate(),
+                            ),
+                            icon: const Icon(Icons.search_rounded),
+                          ),
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundImage:
+                                AppSettings.instance.profileImage == null
+                                ? null
+                                : MemoryImage(
+                                    AppSettings.instance.profileImage!,
+                                  ),
+                            child: AppSettings.instance.profileImage == null
+                                ? const Icon(Icons.person, size: 28)
+                                : null,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -74,6 +93,68 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Today\'s focus',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text('${store.studyStreak} day streak'),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          focusTask == null
+                              ? 'You are all caught up. Enjoy the space.'
+                              : focusTask.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          focusTask == null
+                              ? 'No open tasks right now.'
+                              : 'Next deadline: ${_dateText(focusTask.dueDate)}',
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.tonalIcon(
+                              onPressed: () => context.go(AppRoutes.planner),
+                              icon: const Icon(Icons.calendar_month_outlined),
+                              label: const Text('Planner'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  context.go(AppRoutes.weeklyReport),
+                              icon: const Icon(Icons.insights_outlined),
+                              label: const Text('Report'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () => _showQuickAdd(context),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Quick add'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              AnalyticsDashboard(store: store),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Card(
@@ -175,8 +256,7 @@ class HomePage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: OutlinedButton(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, AppRoutes.tasks),
+                  onPressed: () => context.go(AppRoutes.tasks),
                   child: const Text('View all tasks'),
                 ),
               ),
@@ -185,6 +265,64 @@ class HomePage extends StatelessWidget {
         );
       },
     ),
+  );
+
+  void _showQuickAdd(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(title: Text('What would you like to add?')),
+            _QuickAddTile(
+              icon: Icons.task_alt,
+              title: 'Task',
+              route: AppRoutes.tasks,
+            ),
+            _QuickAddTile(
+              icon: Icons.calendar_month,
+              title: 'Class',
+              route: AppRoutes.schedule,
+            ),
+            _QuickAddTile(
+              icon: Icons.event,
+              title: 'Event',
+              route: AppRoutes.events,
+            ),
+            _QuickAddTile(
+              icon: Icons.wallet,
+              title: 'Expense',
+              route: AppRoutes.expenses,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickAddTile extends StatelessWidget {
+  const _QuickAddTile({
+    required this.icon,
+    required this.title,
+    required this.route,
+  });
+
+  final IconData icon;
+  final String title;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: Icon(icon),
+    title: Text(title),
+    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+    onTap: () {
+      Navigator.pop(context);
+      context.go(route);
+    },
   );
 }
 
@@ -257,3 +395,126 @@ class _LegendDot extends StatelessWidget {
 
 String _dateText(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+class _StudentSearchDelegate extends SearchDelegate<void> {
+  @override
+  String get searchFieldLabel => 'Search tasks, classes, events...';
+
+  List<_SearchItem> _items() {
+    final store = StudentStore.instance;
+    return [
+      ...store.tasks.map(
+        (task) => _SearchItem(
+          title: task.title,
+          subtitle: '${task.category} - ${_dateText(task.dueDate)}',
+          route: AppRoutes.tasks,
+          icon: task.isExam ? Icons.school_outlined : Icons.task_alt_outlined,
+          searchText: '${task.title} ${task.category} ${task.notes}',
+        ),
+      ),
+      ...store.schedule.map(
+        (item) => _SearchItem(
+          title: item.subject,
+          subtitle: '${item.day} - ${item.time} - ${item.room}',
+          route: AppRoutes.schedule,
+          icon: Icons.calendar_month_outlined,
+          searchText:
+              '${item.subject} ${item.day} ${item.room} ${item.instructor}',
+        ),
+      ),
+      ...store.events.map(
+        (event) => _SearchItem(
+          title: event.title,
+          subtitle: '${event.date} - ${event.place}',
+          route: AppRoutes.events,
+          icon: Icons.event_outlined,
+          searchText:
+              '${event.title} ${event.club} ${event.place} ${event.description}',
+        ),
+      ),
+      ...store.expenses.map(
+        (expense) => _SearchItem(
+          title: expense.title,
+          subtitle:
+              'USD ${expense.amount.toStringAsFixed(2)} - ${expense.category}',
+          route: AppRoutes.expenses,
+          icon: Icons.wallet_outlined,
+          searchText:
+              '${expense.title} ${expense.category} ${expense.paymentMethod} ${expense.notes}',
+        ),
+      ),
+    ];
+  }
+
+  List<_SearchItem> _matches() {
+    final query = this.query.trim().toLowerCase();
+    if (query.isEmpty) return _items();
+    return _items()
+        .where((item) => item.searchText.toLowerCase().contains(query))
+        .toList();
+  }
+
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+    if (query.isNotEmpty)
+      IconButton(
+        tooltip: 'Clear search',
+        onPressed: () => query = '',
+        icon: const Icon(Icons.clear),
+      ),
+  ];
+
+  @override
+  Widget? buildLeading(BuildContext context) => IconButton(
+    tooltip: 'Close search',
+    onPressed: () => close(context, null),
+    icon: const Icon(Icons.arrow_back),
+  );
+
+  @override
+  Widget buildResults(BuildContext context) => _buildList(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _buildList(context);
+
+  Widget _buildList(BuildContext context) {
+    final matches = _matches();
+    if (matches.isEmpty) {
+      return const Center(child: Text('No matching student records'));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      itemCount: matches.length,
+      separatorBuilder: (_, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final item = matches[index];
+        return ListTile(
+          leading: CircleAvatar(child: Icon(item.icon)),
+          title: Text(item.title),
+          subtitle: Text(item.subtitle),
+          onTap: () {
+            close(context, null);
+            context.go(item.route);
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SearchItem {
+  const _SearchItem({
+    required this.title,
+    required this.subtitle,
+    required this.route,
+    required this.icon,
+    required this.searchText,
+  });
+
+  final String title;
+  final String subtitle;
+  final String route;
+  final IconData icon;
+  final String searchText;
+}

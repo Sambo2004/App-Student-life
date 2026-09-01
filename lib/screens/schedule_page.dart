@@ -133,6 +133,74 @@ class SchedulePage extends StatelessWidget {
     );
   }
 
+  Future<void> _editClass(BuildContext context, ClassSchedule item) async {
+    final subject = TextEditingController(text: item.subject);
+    final room = TextEditingController(text: item.room);
+    var selectedTime = _parseTime(item.time);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit class'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: subject,
+                decoration: const InputDecoration(labelText: 'Subject'),
+              ),
+              TextField(
+                controller: room,
+                decoration: const InputDecoration(labelText: 'Room'),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Start time'),
+                subtitle: Text(_formatTime(selectedTime)),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: selectedTime,
+                  );
+                  if (picked != null) {
+                    setDialogState(() => selectedTime = picked);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (subject.text.trim().isEmpty || room.text.trim().isEmpty) {
+                  return;
+                }
+                StudentStore.instance.updateClass(
+                  item,
+                  ClassSchedule(
+                    subject: subject.text.trim(),
+                    time: _formatTime(selectedTime),
+                    room: room.text.trim(),
+                    day: item.day,
+                    endTime: item.endTime,
+                    instructor: item.instructor,
+                    notes: item.notes,
+                  ),
+                );
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => AppShell(
     index: 1,
@@ -169,10 +237,20 @@ class SchedulePage extends StatelessWidget {
                       '${item.notes.isEmpty ? '' : '\n${item.notes}'}',
                     ),
                     isThreeLine: item.notes.isNotEmpty,
-                    trailing: IconButton(
-                      tooltip: 'Delete class',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => StudentStore.instance.deleteClass(item),
+                    trailing: Wrap(
+                      children: [
+                        IconButton(
+                          tooltip: 'Edit class',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _editClass(context, item),
+                        ),
+                        IconButton(
+                          tooltip: 'Delete class',
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () =>
+                              StudentStore.instance.deleteClass(item),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -189,6 +267,20 @@ String _formatTime(TimeOfDay time) {
   final minute = time.minute.toString().padLeft(2, '0');
   final period = time.period == DayPeriod.am ? 'AM' : 'PM';
   return '$hour:$minute $period';
+}
+
+TimeOfDay _parseTime(String value) {
+  final match = RegExp(
+    r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+    caseSensitive: false,
+  ).firstMatch(value.trim());
+  if (match == null) return const TimeOfDay(hour: 9, minute: 0);
+  var hour = int.parse(match.group(1)!);
+  final minute = int.parse(match.group(2)!);
+  final isPm = match.group(3)!.toUpperCase() == 'PM';
+  if (hour == 12) hour = 0;
+  if (isPm) hour += 12;
+  return TimeOfDay(hour: hour, minute: minute);
 }
 
 const _weekdays = [

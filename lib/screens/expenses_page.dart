@@ -97,6 +97,65 @@ class ExpensesPage extends StatelessWidget {
     );
   }
 
+  Future<void> _editExpense(
+    BuildContext context,
+    StudentExpense expense,
+  ) async {
+    final title = TextEditingController(text: expense.title);
+    final amount = TextEditingController(
+      text: expense.amount.toStringAsFixed(2),
+    );
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit expense'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: title,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            TextField(
+              controller: amount,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(labelText: 'Amount (USD)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = double.tryParse(amount.text);
+              if (title.text.trim().isEmpty || value == null || value <= 0) {
+                return;
+              }
+              StudentStore.instance.updateExpense(
+                expense,
+                StudentExpense(
+                  title.text.trim(),
+                  value,
+                  expense.date,
+                  category: expense.category,
+                  paymentMethod: expense.paymentMethod,
+                  notes: expense.notes,
+                ),
+              );
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => AppShell(
     index: 3,
@@ -119,13 +178,13 @@ class ExpensesPage extends StatelessWidget {
               ),
               Card(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                color: const Color(0xFF20203A),
+                color: Theme.of(context).colorScheme.primaryContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
                     'TOTAL SPENDING\nUSD ${store.totalExpenses.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -141,7 +200,32 @@ class ExpensesPage extends StatelessWidget {
                     '${expense.category} - ${expense.paymentMethod} - ${dateText(expense.date)}${expense.notes.isEmpty ? '' : '\n${expense.notes}'}',
                   ),
                   isThreeLine: expense.notes.isNotEmpty,
-                  trailing: Text('USD ${expense.amount.toStringAsFixed(2)}'),
+                  trailing: Wrap(
+                    children: [
+                      IconButton(
+                        tooltip: 'Edit expense',
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () => _editExpense(context, expense),
+                      ),
+                      IconButton(
+                        tooltip: 'Delete expense',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () {
+                          StudentStore.instance.deleteExpense(expense);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Expense deleted'),
+                              action: SnackBarAction(
+                                label: 'Undo',
+                                onPressed: () => StudentStore.instance
+                                    .restoreExpense(expense),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

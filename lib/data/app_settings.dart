@@ -20,6 +20,8 @@ class AppSettings extends GetxController {
   double get fontScale => _fontScale.clamp(0.85, 1.15).toDouble();
   Color _textColor = Colors.black87;
   Color get textColor => _textColor;
+  Uint8List? _backgroundImage;
+  Uint8List? get backgroundImage => _backgroundImage;
   Uint8List? _profileImage;
   Uint8List? get profileImage => _profileImage;
   bool _onboardingComplete = false;
@@ -34,6 +36,10 @@ class AppSettings extends GetxController {
     _fontScale = (preferences.getDouble('fontScale') ?? 1).clamp(0.85, 1.15);
     final savedColor = preferences.getInt('textColor');
     if (savedColor != null) _textColor = Color(savedColor);
+    final savedBackgroundImage = preferences.getString('backgroundImage');
+    if (savedBackgroundImage != null) {
+      _backgroundImage = base64Decode(savedBackgroundImage);
+    }
     final savedImage = preferences.getString('profileImage');
     if (savedImage != null) _profileImage = base64Decode(savedImage);
     _themeMode = switch (savedMode) {
@@ -88,6 +94,21 @@ class AppSettings extends GetxController {
     );
   }
 
+  Future<void> setBackgroundImage(Uint8List bytes) async {
+    _backgroundImage = bytes;
+    update();
+    await (await SharedPreferences.getInstance()).setString(
+      'backgroundImage',
+      base64Encode(bytes),
+    );
+  }
+
+  Future<void> clearBackgroundImage() async {
+    _backgroundImage = null;
+    update();
+    await (await SharedPreferences.getInstance()).remove('backgroundImage');
+  }
+
   Future<void> setProfileImage(Uint8List bytes) async {
     _profileImage = bytes;
     update();
@@ -114,6 +135,7 @@ class AppSettings extends GetxController {
       'fontFamily',
       'fontScale',
       'textColor',
+      'backgroundImage',
       'profileImage',
       'onboardingComplete',
     ]) {
@@ -124,6 +146,7 @@ class AppSettings extends GetxController {
     _fontFamily = 'Default';
     _fontScale = 1;
     _textColor = Colors.black87;
+    _backgroundImage = null;
     _profileImage = null;
     _onboardingComplete = false;
     update();

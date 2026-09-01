@@ -2,7 +2,8 @@
     <application
         android:label="Student Life Hub"
         android:name="${applicationName}"
-        android:icon="@drawable/app_logo">
+        android:icon="@drawable/student_life_icon"
+        android:roundIcon="@drawable/student_life_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

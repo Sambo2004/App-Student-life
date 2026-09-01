@@ -6,6 +6,6 @@ void main() {
     await tester.pumpWidget(const StudentLifeApp());
 
     expect(find.text('Student Life\nHub'), findsOneWidget);
-    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Next'), findsOneWidget);
   });
 }

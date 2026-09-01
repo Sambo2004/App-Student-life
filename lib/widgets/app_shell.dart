@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../routes/app_routes.dart';
 import 'app_background.dart';
@@ -56,7 +57,9 @@ class AppShell extends StatelessWidget {
 
     void navigate(int value) {
       if (value != index) {
-        Navigator.pushReplacementNamed(context, destinations[value]);
+        // Replace only the current tab route and let GetX animate the change.
+        // This avoids the abrupt browser-like replacement animation.
+        context.go(destinations[value]);
       }
     }
 

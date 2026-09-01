@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/app_settings.dart';
 import '../routes/app_routes.dart';
@@ -47,7 +48,7 @@ class _WelcomePageState extends State<WelcomePage> {
   void _next() {
     if (_page == _slides.length - 1) {
       AppSettings.instance.completeOnboarding();
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      context.go(AppRoutes.home);
       return;
     }
     _pageController.nextPage(
@@ -142,44 +143,50 @@ class _SlideView extends StatelessWidget {
   final _WelcomeSlide slide;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      if (slide.image)
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: AspectRatio(
-            aspectRatio: 500 / 281,
-            child: Image.asset('assets/start_page.gif', fit: BoxFit.cover),
+  Widget build(BuildContext context) => SingleChildScrollView(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 360),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (slide.image)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: AspectRatio(
+                aspectRatio: 500 / 281,
+                child: Image.asset('assets/start_page.gif', fit: BoxFit.cover),
+              ),
+            )
+          else
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Icon(
+                slide.icon,
+                size: 52,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          const SizedBox(height: 28),
+          Text(
+            slide.title,
+            style: Theme.of(context).textTheme.displaySmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
-        )
-      else
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(28),
+          const SizedBox(height: 14),
+          Text(
+            slide.body,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-          child: Icon(
-            slide.icon,
-            size: 52,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      const SizedBox(height: 28),
-      Text(
-        slide.title,
-        style: Theme.of(context).textTheme.displaySmall
-            ?.copyWith(fontWeight: FontWeight.bold),
+        ],
       ),
-      const SizedBox(height: 14),
-      Text(
-        slide.body,
-        style: Theme.of(context).textTheme.titleMedium
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-      ),
-    ],
+    ),
   );
 }

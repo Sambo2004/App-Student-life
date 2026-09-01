@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import 'data/app_settings.dart';
 import 'data/student_store.dart';
@@ -14,8 +15,22 @@ Future<void> main() async {
   runApp(const StudentLifeApp());
 }
 
-class StudentLifeApp extends StatelessWidget {
+class StudentLifeApp extends StatefulWidget {
   const StudentLifeApp({super.key});
+
+  @override
+  State<StudentLifeApp> createState() => _StudentLifeAppState();
+}
+
+class _StudentLifeAppState extends State<StudentLifeApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    // Keep the router alive while settings rebuild the app theme.
+    _router = AppRoutes.createRouter();
+  }
 
   @override
   Widget build(BuildContext context) => GetBuilder<AppSettings>(
@@ -40,9 +55,10 @@ class StudentLifeApp extends StatelessWidget {
             onSurface: darkTextColor,
             onSurfaceVariant: darkTextColor.withValues(alpha: 0.72),
           );
-      return GetMaterialApp(
+      return MaterialApp.router(
         title: 'Student Life Hub',
         debugShowCheckedModeBanner: false,
+        routerConfig: _router,
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: lightScheme,
@@ -59,7 +75,7 @@ class StudentLifeApp extends StatelessWidget {
         darkTheme: ThemeData(
           useMaterial3: true,
           colorScheme: darkScheme,
-          scaffoldBackgroundColor: Color(0xFF121212),
+          scaffoldBackgroundColor: const Color(0xFF121212),
           textTheme: Typography.material2021().white.apply(
             fontFamily: family,
             bodyColor: darkTextColor,
@@ -67,10 +83,6 @@ class StudentLifeApp extends StatelessWidget {
           ),
         ),
         themeMode: AppSettings.instance.themeMode,
-        initialRoute: settings.onboardingComplete
-            ? AppRoutes.home
-            : AppRoutes.welcome,
-        routes: AppRoutes.routes,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context)
               .copyWith(textScaler: TextScaler.linear(settings.fontScale)),

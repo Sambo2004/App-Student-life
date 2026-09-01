@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../data/app_settings.dart';
@@ -14,6 +15,18 @@ class ProfilePage extends StatelessWidget {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file != null) {
       await AppSettings.instance.setProfileImage(await file.readAsBytes());
+    }
+  }
+
+  Future<void> _pickBackgroundImage(BuildContext context) async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1600,
+      maxHeight: 1200,
+      imageQuality: 75,
+    );
+    if (file != null) {
+      await AppSettings.instance.setBackgroundImage(await file.readAsBytes());
     }
   }
 
@@ -128,6 +141,23 @@ class ProfilePage extends StatelessWidget {
                   ),
                   const Divider(height: 1),
                   ListTile(
+                    leading: const Icon(Icons.wallpaper_outlined),
+                    title: const Text('Background image'),
+                    subtitle: Text(
+                      settings.backgroundImage == null
+                          ? 'Use your own image behind the app'
+                          : 'Custom image selected',
+                    ),
+                    onTap: () => _pickBackgroundImage(context),
+                  ),
+                  if (settings.backgroundImage != null)
+                    ListTile(
+                      leading: const Icon(Icons.delete_outline),
+                      title: const Text('Remove background image'),
+                      onTap: AppSettings.instance.clearBackgroundImage,
+                    ),
+                  const Divider(height: 1),
+                  ListTile(
                     leading: const Icon(Icons.dark_mode_outlined),
                     title: const Text('Appearance'),
                     subtitle: const Text('Choose light, dark, or system theme'),
@@ -144,17 +174,41 @@ class ProfilePage extends StatelessWidget {
                   ),
                   const Divider(height: 1),
                   ListTile(
+                    leading: const Icon(Icons.backup_outlined),
+                    title: const Text('Backup data'),
+                    subtitle: const Text('Copy your student data as JSON'),
+                    onTap: () => context.push(AppRoutes.backupRestore),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.restore_outlined),
+                    title: const Text('Restore data'),
+                    subtitle: const Text('Paste a previous JSON backup'),
+                    onTap: () => context.push(AppRoutes.backupRestore),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.local_fire_department_outlined),
+                    title: const Text('Study streak'),
+                    subtitle: const Text('View your daily progress habit'),
+                    onTap: () => context.push(AppRoutes.studyStreak),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.insights_outlined),
+                    title: const Text('Weekly report'),
+                    subtitle: const Text('Review your routine and progress'),
+                    onTap: () => context.push(AppRoutes.weeklyReport),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
                     leading: const Icon(Icons.info_outline),
                     title: const Text('About us'),
                     subtitle: const Text('Learn about Student Life Hub'),
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.about),
+                    onTap: () => context.push(AppRoutes.about),
                   ),
                   ListTile(
                     leading: const Icon(Icons.handshake_outlined),
                     title: const Text('Sponsors & partners'),
                     subtitle: const Text('Support student success'),
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppRoutes.sponsors),
+                    onTap: () => context.push(AppRoutes.sponsors),
                   ),
                 ],
               ),

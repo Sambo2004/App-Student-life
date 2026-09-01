@@ -156,6 +156,69 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
+  Future<void> _editTask(BuildContext context, StudentTask task) async {
+    final title = TextEditingController(text: task.title);
+    var dueDate = task.dueDate;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit task'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: title,
+                  decoration: const InputDecoration(labelText: 'Title'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Due date'),
+                  subtitle: Text(dateText(dueDate)),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: dueDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2035),
+                    );
+                    if (picked != null) setDialogState(() => dueDate = picked);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (title.text.trim().isEmpty) return;
+                StudentStore.instance.updateTask(
+                  task,
+                  StudentTask(
+                    title: title.text.trim(),
+                    dueDate: dueDate,
+                    isExam: task.isExam,
+                    done: task.done,
+                    priority: task.priority,
+                    category: task.category,
+                    notes: task.notes,
+                  ),
+                );
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => AppShell(
     index: 2,
@@ -235,6 +298,11 @@ class _TasksPageState extends State<TasksPage> {
                                 ),
                               ),
                             ),
+                          ),
+                          IconButton(
+                            tooltip: 'Edit task',
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () => _editTask(context, task),
                           ),
                           IconButton(
                             tooltip: 'Delete task',
