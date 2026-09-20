@@ -12,7 +12,7 @@ class AboutPage extends StatelessWidget {
     index: 5,
     child: Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('About Student Life Hub')),
+      appBar: AppBar(title: const Text('About Student Life Hubby')),
       body: AppBackground(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 32),
