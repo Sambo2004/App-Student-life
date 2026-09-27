@@ -30,10 +30,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   get: ^4.6.6
   go_router: ^14.8.1
   image_picker: ^1.1.2
+  pdf: ^3.13.1
   shared_preferences: ^2.5.3
+  share_plus: ^13.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -64,6 +68,15 @@ flutter:
   assets:
     - assets/start_page.gif
     - assets/app_logo.webp
+    - assets/welcome_page.png
+    - assets/welcome_clean_1.png
+    - assets/welcome_clean_2.png
+    - assets/welcome_clean_3.png
+    - assets/welcome_clean_4.png
+  fonts:
+    - family: KhmerUI
+      fonts:
+        - asset: assets/KhmerUI.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

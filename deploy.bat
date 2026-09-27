@@ -1,5 +1,12 @@
 @echo off
 setlocal
+if "%DEPLOY_HOST%"=="" (
+  echo ERROR: Set DEPLOY_HOST before deploying, for example set DEPLOY_HOST=your-server
+  exit /b 1
+)
+if "%DEPLOY_USER%"=="" set "DEPLOY_USER=deploy"
+if "%DEPLOY_PATH%"=="" set "DEPLOY_PATH=/usr/share/nginx/html"
+
 echo Building Flutter Web App...
 call flutter pub get --offline
 if errorlevel 1 goto :failed
@@ -12,10 +19,10 @@ if not exist "build\web\assets\assets\start_page.gif" goto :missing_assets
 if not exist "build\web\assets\fonts\MaterialIcons-Regular.otf" goto :missing_assets
 
 echo Uploading to Server...
-scp -r build\web\* root@100.54.83.211:/usr/share/nginx/html/
+scp -r build\web\* %DEPLOY_USER%@%DEPLOY_HOST%:%DEPLOY_PATH%/
 if errorlevel 1 goto :failed
 
-ssh root@100.54.83.211 chmod -R a+rX /usr/share/nginx/html
+ssh %DEPLOY_USER%@%DEPLOY_HOST% chmod -R a+rX %DEPLOY_PATH%
 if errorlevel 1 goto :failed
 
 echo Deployment Complete!

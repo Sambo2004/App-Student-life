@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 class PageHeader extends StatelessWidget {
@@ -13,7 +15,7 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+    padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,13 +38,18 @@ class PageHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: Theme.of(context).textTheme.headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                context.tr(title),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                  height: 1.15,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
-                subtitle,
+                context.tr(subtitle),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

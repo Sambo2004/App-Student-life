@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
+import '../services/calendar_export_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
 
@@ -37,6 +39,27 @@ class _PlannerPageState extends State<PlannerPage> {
               subtitle: 'See classes and deadlines together.',
               showBackButton: true,
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  try {
+                    await CalendarExportService.shareCalendar(store);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.tr('Could not export the calendar.')),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.download_outlined),
+                label: Text(context.tr('Export calendar')),
+              ),
+            ),
+            const SizedBox(height: 12),
             Card(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               child: CalendarDatePicker(
@@ -54,7 +77,7 @@ class _PlannerPageState extends State<PlannerPage> {
               ),
             ),
             if (tasks.isEmpty && classes.isEmpty)
-              const ListTile(title: Text('Nothing planned for this day.')),
+              ListTile(title: Text(context.tr('Nothing planned for this day.'))),
             ...classes.map(
               (item) => ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.school_outlined)),
@@ -66,7 +89,9 @@ class _PlannerPageState extends State<PlannerPage> {
               (task) => ListTile(
                 leading: Icon(task.isExam ? Icons.school : Icons.task_alt),
                 title: Text(task.title),
-                subtitle: Text(task.done ? 'Completed' : 'Open task'),
+                subtitle: Text(
+                  context.tr(task.done ? 'Completed' : 'Open task'),
+                ),
               ),
             ),
           ],

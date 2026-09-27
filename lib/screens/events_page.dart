@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
 
@@ -97,7 +98,7 @@ class EventsPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             FilledButton(
               onPressed: () {
@@ -107,7 +108,7 @@ class EventsPage extends StatelessWidget {
                   club.text,
                 ].any((value) => value.trim().isEmpty)) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Complete all event fields.')),
+                    SnackBar(content: Text(context.tr('Complete all event fields.'))),
                   );
                   return;
                 }
@@ -132,7 +133,7 @@ class EventsPage extends StatelessWidget {
                 }
                 Navigator.pop(context);
               },
-              child: Text(existing == null ? 'Add' : 'Save'),
+              child: Text(context.tr(existing == null ? 'Add' : 'Save')),
             ),
           ],
         ),

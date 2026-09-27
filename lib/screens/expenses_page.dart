@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
 
@@ -74,7 +75,7 @@ class ExpensesPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -90,7 +91,7 @@ class ExpensesPage extends StatelessWidget {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Save'),
+            child: Text(context.tr('Save')),
           ),
         ],
       ),
@@ -128,7 +129,7 @@ class ExpensesPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -149,7 +150,7 @@ class ExpensesPage extends StatelessWidget {
               );
               Navigator.pop(dialogContext);
             },
-            child: const Text('Save'),
+            child: Text(context.tr('Save')),
           ),
         ],
       ),

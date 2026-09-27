@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../data/app_settings.dart';
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
+import '../services/report_export_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
 
@@ -10,21 +13,45 @@ class WeeklyReportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = StudentStore.instance;
-    final completion = store.tasks.isEmpty
-        ? 0.0
-        : store.completedTasks / store.tasks.length;
     return AppShell(
       index: 0,
       child: AnimatedBuilder(
         animation: store,
-        builder: (context, _) => ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
+        builder: (context, _) {
+          final completion = store.tasks.isEmpty
+              ? 0.0
+              : store.completedTasks / store.tasks.length;
+          return ListView(
+            padding: const EdgeInsets.only(bottom: 24),
+            children: [
             const PageHeader(
               title: 'Weekly report',
               subtitle: 'A simple reflection on your current routine.',
               showBackButton: true,
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _exportWord(context, store),
+                      icon: const Icon(Icons.description_outlined),
+                      label: Text(context.tr('Word')),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.tonalIcon(
+                      onPressed: () => _exportPdf(context, store),
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                      label: Text(context.tr('PDF')),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Card(
@@ -34,14 +61,14 @@ class WeeklyReportPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Overall progress',
+                        context.tr('Overall progress'),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
                       LinearProgressIndicator(value: completion, minHeight: 10),
                       const SizedBox(height: 8),
                       Text(
-                        '${(completion * 100).round()}% of your tasks are complete.',
+                        '${(completion * 100).round()}% ${context.tr('of your tasks are complete.')}',
                       ),
                     ],
                   ),
@@ -74,10 +101,41 @@ class WeeklyReportPage extends StatelessWidget {
               title: 'Campus events',
               value: '${store.events.length}',
             ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  Future<void> _exportWord(BuildContext context, StudentStore store) async {
+    try {
+      await ReportExportService.shareWord(
+        store,
+        AppSettings.instance.displayName,
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not export the Word report.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportPdf(BuildContext context, StudentStore store) async {
+    try {
+      await ReportExportService.sharePdf(
+        store,
+        AppSettings.instance.displayName,
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not export the PDF report.')),
+        );
+      }
+    }
   }
 }
 
@@ -97,7 +155,7 @@ class _ReportTile extends StatelessWidget {
     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
     child: ListTile(
       leading: CircleAvatar(child: Icon(icon)),
-      title: Text(title),
+      title: Text(context.tr(title)),
       trailing: Text(
         value,
         style: const TextStyle(fontWeight: FontWeight.bold),

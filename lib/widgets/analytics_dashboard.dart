@@ -198,15 +198,18 @@ class _PriorityChart extends StatelessWidget {
   final StudentStore store;
 
   @override
-  Widget build(BuildContext context) => _BarChart(
-    values: [
-      store.tasks.where((task) => task.priority == TaskPriority.high).length,
-      store.tasks.where((task) => task.priority == TaskPriority.medium).length,
-      store.tasks.where((task) => task.priority == TaskPriority.low).length,
-    ],
-    labels: const ['High', 'Medium', 'Low'],
-    colors: const [Color(0xFFE85D75), Color(0xFFFFB547), Color(0xFF4DB6AC)],
-  );
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return _BarChart(
+      values: [
+        store.tasks.where((task) => task.priority == TaskPriority.high).length,
+        store.tasks.where((task) => task.priority == TaskPriority.medium).length,
+        store.tasks.where((task) => task.priority == TaskPriority.low).length,
+      ],
+      labels: const ['High', 'Medium', 'Low'],
+      colors: [scheme.error, scheme.tertiary, scheme.secondary],
+    );
+  }
 }
 
 class _SpendingChart extends StatelessWidget {
@@ -216,6 +219,7 @@ class _SpendingChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chartColors = _chartColors(context);
     final totals = <String, double>{};
     for (final expense in store.expenses) {
       totals.update(
@@ -234,7 +238,7 @@ class _SpendingChart extends StatelessWidget {
           child: CustomPaint(
             painter: _DonutPainter(
               values: visible.map((entry) => entry.value).toList(),
-              colors: _chartColors,
+              colors: chartColors,
             ),
           ),
         ),
@@ -251,7 +255,7 @@ class _SpendingChart extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 3),
                         child: Row(
                           children: [
-                            _Dot(color: _chartColors[index]),
+                            _Dot(color: chartColors[index % chartColors.length]),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
@@ -479,12 +483,10 @@ class _Dot extends StatelessWidget {
   );
 }
 
-const _chartColors = [
-  Color(0xFF5B5CE2),
-  Color(0xFFE85D75),
-  Color(0xFFFFB547),
-  Color(0xFF4DB6AC),
-];
+List<Color> _chartColors(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  return [scheme.primary, scheme.secondary, scheme.tertiary, scheme.error];
+}
 
 int _dayIndex(String day) => const [
   'monday',

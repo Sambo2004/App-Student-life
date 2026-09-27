@@ -155,57 +155,62 @@ class CampusEvent {
   );
 }
 
+class CourseGrade {
+  CourseGrade({required this.course, required this.credits, required this.grade});
+
+  final String course;
+  final double credits;
+  final String grade;
+
+  double get points => const {
+    'A': 4,
+    'B': 3,
+    'C': 2,
+    'D': 1,
+    'F': 0,
+  }[grade]!.toDouble();
+
+  Map<String, Object> toJson() => {
+    'course': course,
+    'credits': credits,
+    'grade': grade,
+  };
+
+  static CourseGrade fromJson(Map<String, dynamic> json) => CourseGrade(
+    course: json['course'] as String,
+    credits: (json['credits'] as num).toDouble(),
+    grade: json['grade'] as String,
+  );
+}
+
 class StudentStore extends GetxController {
   StudentStore._();
   static final instance = StudentStore._();
 
   bool _initialized = false;
+  String? _storageError;
+  String? get storageError => _storageError;
 
   Future<void> initialize() async {
     if (_initialized) return;
     final preferences = await SharedPreferences.getInstance();
-    final savedTasks = preferences.getString('tasks');
-    final savedExpenses = preferences.getString('expenses');
-    final savedSchedule = preferences.getString('schedule');
-    final savedEvents = preferences.getString('events');
     final savedCompletionDays = preferences.getStringList('completionDays');
     if (savedCompletionDays != null) completedDays.addAll(savedCompletionDays);
-    if (savedTasks != null) {
-      tasks
-        ..clear()
-        ..addAll(
-          (jsonDecode(savedTasks) as List).map(
-            (item) => StudentTask.fromJson(item as Map<String, dynamic>),
-          ),
-        );
-    }
-    if (savedExpenses != null) {
-      expenses
-        ..clear()
-        ..addAll(
-          (jsonDecode(savedExpenses) as List).map(
-            (item) => StudentExpense.fromJson(item as Map<String, dynamic>),
-          ),
-        );
-    }
-    if (savedSchedule != null) {
-      schedule
-        ..clear()
-        ..addAll(
-          (jsonDecode(savedSchedule) as List).map(
-            (item) => ClassSchedule.fromJson(item as Map<String, dynamic>),
-          ),
-        );
-    }
-    if (savedEvents != null) {
-      events
-        ..clear()
-        ..addAll(
-          (jsonDecode(savedEvents) as List).map(
-            (item) => CampusEvent.fromJson(item as Map<String, dynamic>),
-          ),
-        );
-    }
+    tasks
+      ..clear()
+      ..addAll(_loadList(preferences, 'tasks', StudentTask.fromJson));
+    expenses
+      ..clear()
+      ..addAll(_loadList(preferences, 'expenses', StudentExpense.fromJson));
+    schedule
+      ..clear()
+      ..addAll(_loadList(preferences, 'schedule', ClassSchedule.fromJson));
+    events
+      ..clear()
+      ..addAll(_loadList(preferences, 'events', CampusEvent.fromJson));
+    grades
+      ..clear()
+      ..addAll(_loadList(preferences, 'grades', CourseGrade.fromJson));
     _initialized = true;
     update();
   }
@@ -214,11 +219,18 @@ class StudentStore extends GetxController {
   final expenses = <StudentExpense>[];
   final schedule = <ClassSchedule>[];
   final events = <CampusEvent>[];
+  final grades = <CourseGrade>[];
   final completedDays = <String>{};
 
   int get completedTasks => tasks.where((task) => task.done).length;
   double get totalExpenses =>
       expenses.fold<double>(0, (total, item) => total + item.amount);
+  double get gpa {
+    final credits = grades.fold<double>(0, (total, item) => total + item.credits);
+    if (credits == 0) return 0;
+    return grades.fold<double>(0, (total, item) => total + item.points * item.credits) /
+        credits;
+  }
 
   int get studyStreak {
     var streak = 0;
@@ -359,8 +371,9 @@ class StudentStore extends GetxController {
     expenses.clear();
     schedule.clear();
     events.clear();
+    grades.clear();
     completedDays.clear();
-    for (final key in ['tasks', 'expenses', 'schedule', 'events']) {
+    for (final key in ['tasks', 'expenses', 'schedule', 'events', 'grades']) {
       await preferences.remove(key);
     }
     update();
@@ -373,10 +386,15 @@ class StudentStore extends GetxController {
     'expenses': expenses.map((expense) => expense.toJson()).toList(),
     'schedule': schedule.map((item) => item.toJson()).toList(),
     'events': events.map((event) => event.toJson()).toList(),
+    'grades': grades.map((grade) => grade.toJson()).toList(),
     'completionDays': completedDays.toList(),
   });
 
   Future<void> importBackup(String source) async {
+    if (source.length > 5 * 1024 * 1024) {
+      throw const FormatException('Backup is too large. Maximum size is 5 MB.');
+    }
+
     final decoded = jsonDecode(source);
     if (decoded is! Map<String, dynamic> || decoded['version'] != 1) {
       throw const FormatException('Unsupported backup format.');
@@ -398,6 +416,10 @@ class StudentStore extends GetxController {
       decoded['events'],
       (item) => CampusEvent.fromJson(item),
     );
+    final importedGrades = _decodeList(
+      decoded['grades'] ?? [],
+      (item) => CourseGrade.fromJson(item),
+    );
 
     tasks
       ..clear()
@@ -411,6 +433,9 @@ class StudentStore extends GetxController {
     events
       ..clear()
       ..addAll(importedEvents);
+    grades
+      ..clear()
+      ..addAll(importedGrades);
     completedDays
       ..clear()
       ..addAll(
@@ -472,25 +497,74 @@ class StudentStore extends GetxController {
     update();
   }
 
+  void addGrade(String course, double credits, String grade) {
+    if (course.trim().isEmpty || credits <= 0 || !'ABCDF'.contains(grade)) {
+      return;
+    }
+    grades.add(
+      CourseGrade(course: course.trim(), credits: credits, grade: grade),
+    );
+    _save();
+    update();
+  }
+
+  void deleteGrade(CourseGrade grade) {
+    grades.remove(grade);
+    _save();
+    update();
+  }
+
   Future<void> _save() async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(
-      'tasks',
-      jsonEncode(tasks.map((task) => task.toJson()).toList()),
-    );
-    await preferences.setString(
-      'expenses',
-      jsonEncode(expenses.map((expense) => expense.toJson()).toList()),
-    );
-    await preferences.setString(
-      'schedule',
-      jsonEncode(schedule.map((item) => item.toJson()).toList()),
-    );
-    await preferences.setString(
-      'events',
-      jsonEncode(events.map((event) => event.toJson()).toList()),
-    );
-    await preferences.setStringList('completionDays', completedDays.toList());
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        'tasks',
+        jsonEncode(tasks.map((task) => task.toJson()).toList()),
+      );
+      await preferences.setString(
+        'expenses',
+        jsonEncode(expenses.map((expense) => expense.toJson()).toList()),
+      );
+      await preferences.setString(
+        'schedule',
+        jsonEncode(schedule.map((item) => item.toJson()).toList()),
+      );
+      await preferences.setString(
+        'events',
+        jsonEncode(events.map((event) => event.toJson()).toList()),
+      );
+      await preferences.setString(
+        'grades',
+        jsonEncode(grades.map((grade) => grade.toJson()).toList()),
+      );
+      await preferences.setStringList('completionDays', completedDays.toList());
+      _storageError = null;
+    } catch (_) {
+      _storageError = 'Your latest change could not be saved locally.';
+      update();
+    }
+  }
+}
+
+List<T> _loadList<T>(
+  SharedPreferences preferences,
+  String key,
+  T Function(Map<String, dynamic>) decoder,
+) {
+  final raw = preferences.getString(key);
+  if (raw == null) return [];
+
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) throw const FormatException('Expected a list.');
+    return decoded.map((item) {
+      if (item is! Map) throw const FormatException('Invalid record.');
+      return decoder(Map<String, dynamic>.from(item));
+    }).toList();
+  } catch (_) {
+    StudentStore.instance._storageError ??=
+        'Some saved data could not be read. New data was kept safe.';
+    return [];
   }
 }
 
@@ -498,7 +572,9 @@ List<T> _decodeList<T>(
   dynamic value,
   T Function(Map<String, dynamic>) decoder,
 ) {
-  if (value is! List) throw const FormatException('Invalid backup records.');
+  if (value is! List || value.length > 10000) {
+    throw const FormatException('Invalid or oversized backup records.');
+  }
   return value.map((item) {
     if (item is! Map) throw const FormatException('Invalid backup record.');
     return decoder(Map<String, dynamic>.from(item));

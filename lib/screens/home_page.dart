@@ -93,6 +93,31 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
+              if (store.storageError != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Card(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.warning_amber_rounded,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                      title: Text(
+                        'Local data notice',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                      subtitle: Text(
+                        store.storageError!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Card(
@@ -246,9 +271,9 @@ class HomePage extends StatelessWidget {
                           '${task.isExam ? 'Exam' : 'Assignment'} - Due ${_dateText(task.dueDate)}',
                         ),
                         trailing: task.done
-                            ? const Icon(
+                            ? Icon(
                                 Icons.check_circle,
-                                color: Colors.green,
+                                color: Theme.of(context).colorScheme.tertiary,
                               )
                             : null,
                       ),

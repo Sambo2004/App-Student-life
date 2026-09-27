@@ -1,0 +1,122 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Aptos;}{\f1 Aptos Display;}}
+{\colortbl;\red18\green54\blue92;\red42\green42\blue42;\red90\green90\blue90;}
+\paperw11906\paperh16838\margl1134\margr1134\margt1134\margb1134
+\viewkind4\uc1
+\pard\qc\sa240\f1\fs36\cf1\b STUDENT LIFE HUB\b0\par
+\pard\qc\sa120\f0\fs26\cf2 SYSTEM PROPOSAL\par
+\pard\qc\sa360\fs20\cf3 An offline-first productivity and routine management application for students\par
+\pard\qc\sa120\fs22\cf2 Prepared for academic project presentation\par
+\pard\qc\sa360\fs22\cf2 Founder: Sum Sambo\par
+\pard\qc\sa480\fs20\cf3 Computer Science\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 1. Executive Summary\b0\par
+\pard\sa180\f0\fs22\cf2 Student Life Hub is a Flutter-based productivity application designed to help students organize their academic and personal routines in one workspace. The system combines class scheduling, assignment and exam tracking, campus events, expense management, routine analytics, study streaks, and personal appearance settings. It is designed as an offline-first application so users can continue managing important information without an internet connection.\par
+\pard\sa180\fs22\cf2 The application provides a clean onboarding experience, responsive navigation, local persistence, data backup and restore, and a production web deployment path. The proposal describes the current system, its intended users, functional requirements, technical architecture, security boundaries, and future development direction.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 2. Background and Problem Statement\b0\par
+\pard\sa180\f0\fs22\cf2 Students often manage academic schedules, assignments, events, personal spending, and study habits across separate notebooks and applications. This can lead to missed deadlines, poor visibility into weekly routines, and difficulty understanding how time and money are being used.\par
+\pard\sa180\fs22\cf2 Student Life Hub addresses this problem by providing one focused system for daily student organization. The application is intended to reduce information fragmentation, improve planning, and give students a quick overview of their progress.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 3. Project Objectives\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Provide one central place for classes, tasks, events, and expenses.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Help users plan academic activities with dates, times, priorities, and notes.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Provide useful summaries and charts for routine and spending awareness.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Preserve user data locally when the application is closed or offline.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Support personal customization, including name, profile image, font, text size, color, and theme.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Provide backup and restore so users can protect and transfer their records.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Offer a responsive experience on mobile, tablet, desktop, and web layouts.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 4. Target Users\b0\par
+\pard\sa180\f0\fs22\cf2 The primary users are university and college students who need a simple personal organizer for academic planning and daily routines. The system can also support student clubs, mentors, and future institutional partners through its event and sponsor information areas.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 5. System Scope\b0\par
+\pard\sa120\f0\fs24\cf1\b Included Features\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Four-page visual onboarding for first-time users.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Home dashboard with greeting, profile image, summaries, routine chart, and analytics.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Class schedule with subject, day, start time, end time, room, instructor, and notes.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Tasks for assignments and exams with due dates, categories, priorities, notes, completion, filters, delete, and undo.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Campus events with date, time, location, organizer, and description.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Expense tracking with amount, date, category, payment method, notes, and totals.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Weekly report, planner, study streak, and routine insights.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Profile customization and appearance settings.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab About Us and Sponsors & Partners information pages.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab JSON backup and restore with input validation.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Responsive navigation with side navigation on wide screens and bottom navigation on small screens.\par
+\pard\sa120\fs24\cf1\b Out of Scope for the Current Version\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Online accounts and multi-user authentication.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Cloud synchronization between devices.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Server-side database and shared social groups.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Automated push notifications and external calendar synchronization.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 6. Functional Requirements\b0\par
+\pard\sa120\f0\fs22\cf2\b FR-01 Onboarding:\b0 The system shall show the welcome experience on first launch and open the Home page on later launches after onboarding is completed.\par
+\pard\sa120\fs22\cf2\b FR-02 Schedule:\b0 Users shall be able to create, edit, and delete classes with academic details and selectable dates and times.\par
+\pard\sa120\fs22\cf2\b FR-03 Tasks:\b0 Users shall be able to create, edit, complete, filter, delete, and restore tasks and exams.\par
+\pard\sa120\fs22\cf2\b FR-04 Events:\b0 Users shall be able to record campus events with schedule and location information.\par
+\pard\sa120\fs22\cf2\b FR-05 Expenses:\b0 Users shall be able to record and review spending information and totals.\par
+\pard\sa120\fs22\cf2\b FR-06 Personalization:\b0 Users shall be able to change their display name, profile image, font family, font size, text color, and theme.\par
+\pard\sa120\fs22\cf2\b FR-07 Persistence:\b0 User records and settings shall remain available after closing and reopening the app.\par
+\pard\sa120\fs22\cf2\b FR-08 Backup:\b0 Users shall be able to export and import a versioned JSON backup. Invalid or oversized backups shall be rejected before replacing data.\par
+\pard\sa180\fs22\cf2\b FR-09 Navigation:\b0 The system shall provide responsive navigation and smooth route transitions between major pages.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 7. Non-Functional Requirements\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Usability: common actions should be understandable without technical training.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Responsiveness: layouts should adapt to phone, tablet, desktop, and web sizes.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Reliability: malformed local records should not crash the application during startup.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Maintainability: data access should gradually move from the global store into feature repositories.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Privacy: personal records should remain local unless the user deliberately exports or shares them.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Performance: the dashboard and lists should remain usable with normal student data volumes.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 8. Technical Architecture\b0\par
+\pard\sa180\f0\fs22\cf2 The system is implemented using Flutter and Dart with Material 3 components. GetX is used for controller-based state updates and application settings. GoRouter manages named routes and smooth navigation. SharedPreferences stores local settings and serialized student records. Image Picker supports profile image selection. Custom Flutter widgets provide the app shell, background, page headers, charts, and analytics dashboard.\par
+\pard\sa120\fs24\cf1\b Current Layer Organization\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Presentation: screens and reusable widgets for user interaction.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Application state: GetX controllers and the StudentStore.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Data: models, local persistence, settings, backup, and task repository boundary.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Routing: named application routes and onboarding redirect behavior.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Assets and platform: Flutter assets, web configuration, Android branding, and deployment script.\par
+\pard\sa180\fs22\cf2 The current architecture is intentionally local-first and incremental. The TaskRepository adapter is the first step toward separating feature data access from page code without changing the existing user data format.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 9. Data and Security\b0\par
+\pard\sa180\f0\fs22\cf2 The current application does not provide accounts, authentication, a backend, or encrypted cloud synchronization. Records are stored in the device or browser local storage. This makes the system useful offline but means that anyone controlling an unlocked device or browser profile may access local records.\par
+\pard\sa180\fs22\cf2 Current protections include validated local loading, save error reporting, backup size and record limits, secret-file exclusions, non-root deployment guidance, and recommended Nginx security headers. Future production work should add secure storage, encryption, authentication, a privacy policy, and a carefully designed cloud synchronization service.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 10. User Workflow\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab User installs or opens the application.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab User views the onboarding slides and selects Get started.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab User opens the Home dashboard and reviews routine summaries.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab User adds classes, tasks, events, and expenses using forms and pickers.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab User reviews analytics, weekly report, planner, and study streak.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab User changes profile and appearance preferences when needed.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab User exports a backup or resets local data from Profile.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 11. Testing and Quality Plan\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Unit tests for model serialization, validation, calculations, and repositories.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Widget tests for task forms, responsive navigation, settings, and empty states.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Integration tests for onboarding, adding records, persistence, backup, and restore.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Manual checks on mobile and wide web layouts to detect overflow.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Release checks for asset inclusion, icons, route access, and deployment permissions.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Static analysis and formatting before commits.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 12. Deployment Plan\b0\par
+\pard\sa180\f0\fs22\cf2 The web version is built using Flutter release mode and produces files in build/web. The deployment script verifies required image and Material Icons assets, uploads the release files using SCP, and applies readable permissions on the Nginx directory. Production deployment should use HTTPS, a dedicated non-root deployment user, restricted SSH keys, environment-based host configuration, and Nginx security headers.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 13. Future Development Roadmap\b0\par
+\pard\li360\sa100\f0\fs22\cf2\bullet\tab Complete repository migration for schedules, events, expenses, and settings.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Replace large serialized preferences with a structured local database such as Drift or Hive.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Add encrypted secure storage for sensitive settings and backup protection.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Add authentication and optional cloud synchronization.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Add local notifications and calendar integration.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Add CSV and PDF reports, richer analytics, and export history.\par
+\pard\li360\sa100\fs22\cf2\bullet\tab Add automated CI/CD, crash reporting, and performance monitoring.\par
+\pard\li360\sa180\fs22\cf2\bullet\tab Publish privacy documentation and conduct a security review before public release.\par
+
+\pard\sb240\sa120\f1\fs28\cf1\b 14. Project Team\b0\par
+\pard\sa100\f0\fs22\cf2\b Founder:\b0 Sum Sambo\par
+\pard\sa100\fs22\cf2\b Email:\b0 sumsambo8899@gmail.com\par
+\pard\sa100\fs22\cf2\b Education:\b0 Computer Science\par
+\pard\sa100\fs22\cf2\b Team members:\b0 Sao Sreynet, Srun Darasthya, and Kun Korn\par
+
+\pard\sb360\sa120\qc\f0\fs20\cf3 End of Proposal\par
+}

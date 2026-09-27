@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../data/app_settings.dart';
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
 import '../routes/app_routes.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
@@ -118,14 +119,14 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.text_fields),
-                    title: const Text('Text size'),
+                    title: Text(context.tr('Text size')),
                     subtitle: Text(_fontSizeLabel(settings.fontScale)),
                     onTap: () => _showTextSize(context),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.font_download_outlined),
-                    title: const Text('Font style'),
+                    title: Text(context.tr('Font style')),
                     subtitle: Text(settings.fontFamily),
                     onTap: () => _showFontPicker(context),
                   ),
@@ -159,14 +160,32 @@ class ProfilePage extends StatelessWidget {
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.dark_mode_outlined),
-                    title: const Text('Appearance'),
+                    title: Text(context.tr('Appearance')),
                     subtitle: const Text('Choose light, dark, or system theme'),
                     onTap: () => _showThemePicker(context),
                   ),
                   const Divider(height: 1),
                   ListTile(
+                    leading: const Icon(Icons.language),
+                    title: Text(context.tr('Language')),
+                    subtitle: Text(
+                      settings.languageCode == 'km'
+                          ? context.tr('Khmer')
+                          : context.tr('English'),
+                    ),
+                    onTap: () => _showLanguagePicker(context),
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.contrast),
+                    title: Text(context.tr('High contrast')),
+                    subtitle: const Text('Improve text and control visibility'),
+                    value: settings.highContrast,
+                    onChanged: AppSettings.instance.setHighContrast,
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
                     leading: const Icon(Icons.restart_alt),
-                    title: const Text('Reset app data'),
+                    title: Text(context.tr('Reset app data')),
                     subtitle: const Text(
                       'Return to a clean first-install state',
                     ),
@@ -175,38 +194,50 @@ class ProfilePage extends StatelessWidget {
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.backup_outlined),
-                    title: const Text('Backup data'),
+                    title: Text(context.tr('Backup data')),
                     subtitle: const Text('Copy your student data as JSON'),
                     onTap: () => context.push(AppRoutes.backupRestore),
                   ),
                   ListTile(
                     leading: const Icon(Icons.restore_outlined),
-                    title: const Text('Restore data'),
+                    title: Text(context.tr('Restore data')),
                     subtitle: const Text('Paste a previous JSON backup'),
                     onTap: () => context.push(AppRoutes.backupRestore),
                   ),
                   ListTile(
                     leading: const Icon(Icons.local_fire_department_outlined),
-                    title: const Text('Study streak'),
+                    title: Text(context.tr('Study streak')),
                     subtitle: const Text('View your daily progress habit'),
                     onTap: () => context.push(AppRoutes.studyStreak),
                   ),
                   ListTile(
                     leading: const Icon(Icons.insights_outlined),
-                    title: const Text('Weekly report'),
+                    title: Text(context.tr('Weekly report')),
                     subtitle: const Text('Review your routine and progress'),
                     onTap: () => context.push(AppRoutes.weeklyReport),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.timer_outlined),
+                    title: Text(context.tr('Focus timer')),
+                    subtitle: const Text('Use a Pomodoro study session'),
+                    onTap: () => context.push(AppRoutes.pomodoro),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.school_outlined),
+                    title: Text(context.tr('Grades and GPA')),
+                    subtitle: const Text('Track course results and GPA'),
+                    onTap: () => context.push(AppRoutes.grades),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.info_outline),
-                    title: const Text('About us'),
+                    title: Text(context.tr('About us')),
                     subtitle: const Text('Learn about Student Life Hub'),
                     onTap: () => context.push(AppRoutes.about),
                   ),
                   ListTile(
                     leading: const Icon(Icons.handshake_outlined),
-                    title: const Text('Sponsors & partners'),
+                    title: Text(context.tr('Sponsors & partners')),
                     subtitle: const Text('Support student success'),
                     onTap: () => context.push(AppRoutes.sponsors),
                   ),
@@ -284,7 +315,7 @@ class ProfilePage extends StatelessWidget {
       Colors.blue,
       Colors.teal,
       Colors.deepOrange,
-      Colors.purple,
+      Colors.blueGrey,
     ];
     await showModalBottomSheet<void>(
       context: context,
@@ -333,6 +364,41 @@ class ProfilePage extends StatelessWidget {
                 ),
               )
               .toList(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showLanguagePicker(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(title: Text('Language')),
+            ListTile(
+              title: const Text('English'),
+              trailing: AppSettings.instance.languageCode == 'en'
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                AppSettings.instance.setLanguageCode('en');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('ភាសាខ្មែរ'),
+              subtitle: const Text('Khmer'),
+              trailing: AppSettings.instance.languageCode == 'km'
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                AppSettings.instance.setLanguageCode('km');
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
       ),
     );

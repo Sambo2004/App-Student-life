@@ -6,8 +6,10 @@ import '../screens/about_page.dart';
 import '../screens/events_page.dart';
 import '../screens/expenses_page.dart';
 import '../screens/home_page.dart';
+import '../screens/grades_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/planner_page.dart';
+import '../screens/pomodoro_page.dart';
 import '../screens/weekly_report_page.dart';
 import '../screens/schedule_page.dart';
 import '../screens/sponsors_page.dart';
@@ -27,6 +29,8 @@ abstract final class AppRoutes {
   static const about = '/about';
   static const sponsors = '/sponsors';
   static const planner = '/planner';
+  static const pomodoro = '/pomodoro';
+  static const grades = '/grades';
   static const weeklyReport = '/weekly-report';
   static const studyStreak = '/study-streak';
   static const backupRestore = '/backup-restore';
@@ -81,6 +85,14 @@ abstract final class AppRoutes {
         GoRoute(
           path: planner,
           pageBuilder: (_, state) => _page(state, const PlannerPage()),
+        ),
+        GoRoute(
+          path: pomodoro,
+          pageBuilder: (_, state) => _page(state, const PomodoroPage()),
+        ),
+        GoRoute(
+          path: grades,
+          pageBuilder: (_, state) => _page(state, const GradesPage()),
         ),
         GoRoute(
           path: weeklyReport,

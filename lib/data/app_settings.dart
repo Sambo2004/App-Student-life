@@ -26,11 +26,17 @@ class AppSettings extends GetxController {
   Uint8List? get profileImage => _profileImage;
   bool _onboardingComplete = false;
   bool get onboardingComplete => _onboardingComplete;
+  String _languageCode = 'en';
+  String get languageCode => _languageCode;
+  bool _highContrast = false;
+  bool get highContrast => _highContrast;
 
   Future<void> initialize() async {
     final preferences = await SharedPreferences.getInstance();
     final savedMode = preferences.getString('themeMode');
     _onboardingComplete = preferences.getBool('onboardingComplete') ?? false;
+    _languageCode = preferences.getString('languageCode') ?? 'en';
+    _highContrast = preferences.getBool('highContrast') ?? false;
     _displayName = preferences.getString('displayName') ?? 'Student';
     _fontFamily = preferences.getString('fontFamily') ?? 'Default';
     _fontScale = (preferences.getDouble('fontScale') ?? 1).clamp(0.85, 1.15);
@@ -57,6 +63,19 @@ class AppSettings extends GetxController {
       'themeMode',
       mode.name,
     );
+  }
+
+  Future<void> setLanguageCode(String code) async {
+    if (code != 'en' && code != 'km') return;
+    _languageCode = code;
+    update();
+    await (await SharedPreferences.getInstance()).setString('languageCode', code);
+  }
+
+  Future<void> setHighContrast(bool value) async {
+    _highContrast = value;
+    update();
+    await (await SharedPreferences.getInstance()).setBool('highContrast', value);
   }
 
   Future<void> setDisplayName(String value) async {
@@ -138,6 +157,8 @@ class AppSettings extends GetxController {
       'backgroundImage',
       'profileImage',
       'onboardingComplete',
+      'languageCode',
+      'highContrast',
     ]) {
       await preferences.remove(key);
     }
@@ -149,6 +170,8 @@ class AppSettings extends GetxController {
     _backgroundImage = null;
     _profileImage = null;
     _onboardingComplete = false;
+    _languageCode = 'en';
+    _highContrast = false;
     update();
   }
 }

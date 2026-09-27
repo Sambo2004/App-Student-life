@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/app_settings.dart';
+import '../l10n/app_localizations.dart';
 import '../routes/app_routes.dart';
 import 'app_background.dart';
 
@@ -18,42 +20,67 @@ class AppShell extends StatelessWidget {
     AppRoutes.profile,
   ];
 
-  static const navigationDestinations = [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.calendar_month_outlined),
-      selectedIcon: Icon(Icons.calendar_month),
-      label: 'Schedule',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.task_alt_outlined),
-      selectedIcon: Icon(Icons.task_alt),
-      label: 'Tasks',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.wallet_outlined),
-      selectedIcon: Icon(Icons.wallet),
-      label: 'Budget',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.event_outlined),
-      selectedIcon: Icon(Icons.event),
-      label: 'Events',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ];
+  static List<NavigationDestination> navigationDestinationsFor(
+    BuildContext context,
+  ) {
+    final labels = const [
+      'Home',
+      'Schedule',
+      'Tasks',
+      'Budget',
+      'Events',
+      'Profile',
+    ].map(context.tr).toList();
+    return [
+      NavigationDestination(
+        icon: const Icon(Icons.home_outlined),
+        selectedIcon: const Icon(Icons.home),
+        label: labels[0],
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.calendar_month_outlined),
+        selectedIcon: const Icon(Icons.calendar_month),
+        label: labels[1],
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.task_alt_outlined),
+        selectedIcon: const Icon(Icons.task_alt),
+        label: labels[2],
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.wallet_outlined),
+        selectedIcon: const Icon(Icons.wallet),
+        label: labels[3],
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.event_outlined),
+        selectedIcon: const Icon(Icons.event),
+        label: labels[4],
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline),
+        selectedIcon: const Icon(Icons.person),
+        label: labels[5],
+      ),
+    ];
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 700;
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: AppSettings.instance,
+    builder: (context, _) {
+      final navigationDestinations = navigationDestinationsFor(
+        context,
+      );
+      final isWide = MediaQuery.sizeOf(context).width >= 700;
+      final page = isWide
+          ? Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1240),
+                child: child,
+              ),
+            )
+          : child;
 
     void navigate(int value) {
       if (value != index) {
@@ -74,6 +101,8 @@ class AppShell extends StatelessWidget {
                       selectedIndex: index,
                       onDestinationSelected: navigate,
                       labelType: NavigationRailLabelType.all,
+                      minWidth: 88,
+                      useIndicator: true,
                       destinations: navigationDestinations
                           .map(
                             (destination) => NavigationRailDestination(
@@ -85,10 +114,10 @@ class AppShell extends StatelessWidget {
                           .toList(),
                     ),
                     const VerticalDivider(width: 1),
-                    Expanded(child: child),
+                    Expanded(child: page),
                   ],
                 )
-              : child,
+              : page,
         ),
       ),
       bottomNavigationBar: isWide
@@ -97,9 +126,10 @@ class AppShell extends StatelessWidget {
               selectedIndex: index,
               onDestinationSelected: navigate,
               labelBehavior:
-                  NavigationDestinationLabelBehavior.onlyShowSelected,
+                  NavigationDestinationLabelBehavior.alwaysShow,
               destinations: navigationDestinations,
             ),
     );
-  }
+    },
+  );
 }

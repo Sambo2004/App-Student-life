@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../widgets/app_background.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
@@ -12,7 +13,7 @@ class SponsorsPage extends StatelessWidget {
     index: 5,
     child: Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Sponsors & partners')),
+      appBar: AppBar(title: Text(context.tr('Sponsors & partners'))),
       body: AppBackground(
         child: ListView(
           children: [

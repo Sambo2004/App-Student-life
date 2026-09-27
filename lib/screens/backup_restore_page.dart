@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
 
@@ -25,7 +26,7 @@ class BackupRestorePage extends StatelessWidget {
             children: [
               ListTile(
                 leading: const Icon(Icons.backup_outlined),
-                title: const Text('Copy backup'),
+                title: Text(context.tr('Copy backup')),
                 subtitle: const Text(
                   'Copy all tasks, classes, expenses, and events as JSON.',
                 ),
@@ -34,7 +35,7 @@ class BackupRestorePage extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.restore_outlined),
-                title: const Text('Restore backup'),
+                title: Text(context.tr('Restore backup')),
                 subtitle: const Text(
                   'Paste a JSON backup copied from this app.',
                 ),
@@ -59,7 +60,7 @@ class BackupRestorePage extends StatelessWidget {
     );
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Backup copied to clipboard.')),
+        SnackBar(content: Text(context.tr('Backup copied to clipboard.'))),
       );
     }
   }
@@ -69,7 +70,7 @@ class BackupRestorePage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Restore backup'),
+        title: Text(context.tr('Restore backup')),
         content: TextField(
           controller: controller,
           minLines: 5,
@@ -82,11 +83,11 @@ class BackupRestorePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Restore'),
+            child: Text(context.tr('Restore')),
           ),
         ],
       ),
@@ -99,7 +100,7 @@ class BackupRestorePage extends StatelessWidget {
       await StudentStore.instance.importBackup(controller.text);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup restored successfully.')),
+          SnackBar(content: Text(context.tr('Backup restored successfully.'))),
         );
       }
     } on FormatException catch (error) {

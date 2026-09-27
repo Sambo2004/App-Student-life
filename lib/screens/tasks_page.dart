@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../data/repositories/task_repository.dart';
 import '../data/student_store.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
 
@@ -12,6 +14,7 @@ class TasksPage extends StatefulWidget {
 }
 
 class _TasksPageState extends State<TasksPage> {
+  final _tasks = TaskRepository.instance;
   String _filter = 'Open';
 
   Future<void> _confirmDelete(StudentTask task) async {
@@ -23,23 +26,23 @@ class _TasksPageState extends State<TasksPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(context.tr('Delete')),
           ),
         ],
       ),
     );
     if (confirmed != true || !mounted) return;
-    StudentStore.instance.deleteTask(task);
+    _tasks.deleteTask(task);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Task deleted'),
         action: SnackBarAction(
           label: 'Undo',
-          onPressed: () => StudentStore.instance.restoreTask(task),
+          onPressed: () => _tasks.restoreTask(task),
         ),
       ),
     );
@@ -108,7 +111,7 @@ class _TasksPageState extends State<TasksPage> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Due date'),
+                  title: Text(context.tr('Due date')),
                   subtitle: Text(dateText(dueDate)),
                   onTap: () async {
                     final picked = await showDatePicker(
@@ -128,17 +131,17 @@ class _TasksPageState extends State<TasksPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             FilledButton(
               onPressed: () {
                 if (title.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Add a task title first.')),
+                    SnackBar(content: Text(context.tr('Add a task title first.'))),
                   );
                   return;
                 }
-                StudentStore.instance.addTask(
+                _tasks.addTask(
                   title.text,
                   dueDate,
                   isExam,
@@ -148,7 +151,7 @@ class _TasksPageState extends State<TasksPage> {
                 );
                 Navigator.pop(context);
               },
-              child: const Text('Save'),
+              child: Text(context.tr('Save')),
             ),
           ],
         ),
@@ -174,7 +177,7 @@ class _TasksPageState extends State<TasksPage> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Due date'),
+                  title: Text(context.tr('Due date')),
                   subtitle: Text(dateText(dueDate)),
                   onTap: () async {
                     final picked = await showDatePicker(
@@ -192,12 +195,12 @@ class _TasksPageState extends State<TasksPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             FilledButton(
               onPressed: () {
                 if (title.text.trim().isEmpty) return;
-                StudentStore.instance.updateTask(
+                _tasks.updateTask(
                   task,
                   StudentTask(
                     title: title.text.trim(),
@@ -211,7 +214,7 @@ class _TasksPageState extends State<TasksPage> {
                 );
                 Navigator.pop(dialogContext);
               },
-              child: const Text('Save'),
+              child: Text(context.tr('Save')),
             ),
           ],
         ),
@@ -240,10 +243,10 @@ class _TasksPageState extends State<TasksPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'Open', label: Text('Open')),
-                  ButtonSegment(value: 'Done', label: Text('Done')),
-                  ButtonSegment(value: 'All', label: Text('All')),
+                segments: [
+                  ButtonSegment(value: 'Open', label: Text(context.tr('Open'))),
+                  ButtonSegment(value: 'Done', label: Text(context.tr('Done'))),
+                  ButtonSegment(value: 'All', label: Text(context.tr('All'))),
                 ],
                 selected: {_filter},
                 onSelectionChanged: (value) =>
@@ -267,7 +270,7 @@ class _TasksPageState extends State<TasksPage> {
                       color: Theme.of(context).colorScheme.error,
                       child: const Icon(Icons.delete, color: Colors.white),
                     ),
-                    onDismissed: (_) => StudentStore.instance.deleteTask(task),
+                    onDismissed: (_) => _tasks.deleteTask(task),
                     child: Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -278,8 +281,8 @@ class _TasksPageState extends State<TasksPage> {
                           Expanded(
                             child: CheckboxListTile(
                               value: task.done,
-                              onChanged: (value) => StudentStore.instance
-                                  .toggleTask(task, value ?? false),
+                              onChanged: (value) =>
+                                  _tasks.toggleTask(task, value ?? false),
                               controlAffinity: ListTileControlAffinity.leading,
                               title: Text(
                                 task.title,

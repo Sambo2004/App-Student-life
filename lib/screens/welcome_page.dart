@@ -17,26 +17,10 @@ class _WelcomePageState extends State<WelcomePage> {
   var _page = 0;
 
   static const _slides = [
-    _WelcomeSlide(
-      title: 'Student Life\nHub',
-      body: 'A calm place to organize your classes, tasks, events, and budget.',
-      image: true,
-    ),
-    _WelcomeSlide(
-      title: 'Plan your week',
-      body: 'Add your classes and see your upcoming routine in one clear schedule.',
-      icon: Icons.calendar_month_rounded,
-    ),
-    _WelcomeSlide(
-      title: 'Finish what matters',
-      body: 'Prioritize assignments, track exams, and see your progress at a glance.',
-      icon: Icons.task_alt_rounded,
-    ),
-    _WelcomeSlide(
-      title: 'Stay in control',
-      body: 'Track spending, discover events, and personalize the app to fit you.',
-      icon: Icons.auto_graph_rounded,
-    ),
+    _WelcomeSlide(imageAsset: 'assets/welcome_clean_1.png'),
+    _WelcomeSlide(imageAsset: 'assets/welcome_clean_2.png'),
+    _WelcomeSlide(imageAsset: 'assets/welcome_clean_3.png'),
+    _WelcomeSlide(imageAsset: 'assets/welcome_clean_4.png'),
   ];
 
   @override
@@ -60,81 +44,112 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.transparent,
-    body: SafeArea(
-      child: AppBackground(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 20, 28, 24),
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: _slides.length,
-                  onPageChanged: (value) => setState(() => _page = value),
-                  itemBuilder: (context, index) =>
-                      _SlideView(slide: _slides[index]),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _slides.length,
-                  (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: index == _page ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: index == _page
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  if (_page > 0)
-                    TextButton(
-                      onPressed: () => _pageController.previousPage(
-                        duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOutCubic,
-                      ),
-                      child: const Text('Back'),
-                    )
-                  else
-                    const SizedBox(width: 64),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: _next,
-                    child: Text(
-                      _page == _slides.length - 1 ? 'Get started' : 'Next',
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    body: AppBackground(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: _slides.length,
+            onPageChanged: (value) => setState(() => _page = value),
+            itemBuilder: (context, index) =>
+                _SlideView(slide: _slides[index]),
           ),
-        ),
+          const IgnorePointer(child: _BottomShadow()),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _slides.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: index == _page ? 24 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: index == _page
+                                ? Colors.white
+                                : Colors.white54,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        if (_page > 0)
+                          TextButton(
+                            onPressed: () => _pageController.previousPage(
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Back'),
+                          )
+                        else
+                          const SizedBox(width: 64),
+                        const Spacer(),
+                        FilledButton(
+                          onPressed: _next,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
+                          ),
+                          child: Text(
+                            _page == _slides.length - 1
+                                ? 'Get started'
+                                : 'Next',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _BottomShadow extends StatelessWidget {
+  const _BottomShadow();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.transparent,
+          Colors.black.withValues(alpha: 0.08),
+          Colors.black.withValues(alpha: 0.48),
+        ],
+        stops: const [0.55, 0.78, 1],
       ),
     ),
   );
 }
 
 class _WelcomeSlide {
-  const _WelcomeSlide({
-    required this.title,
-    required this.body,
-    this.icon,
-    this.image = false,
-  });
+  const _WelcomeSlide({required this.imageAsset});
 
-  final String title;
-  final String body;
-  final IconData? icon;
-  final bool image;
+  final String imageAsset;
 }
 
 class _SlideView extends StatelessWidget {
@@ -143,50 +158,23 @@ class _SlideView extends StatelessWidget {
   final _WelcomeSlide slide;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 360),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (slide.image)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: AspectRatio(
-                aspectRatio: 500 / 281,
-                child: Image.asset('assets/start_page.gif', fit: BoxFit.cover),
-              ),
-            )
-          else
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: Icon(
-                slide.icon,
-                size: 52,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          const SizedBox(height: 28),
-          Text(
-            slide.title,
-            style: Theme.of(context).textTheme.displaySmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      Image.asset(slide.imageAsset, fit: BoxFit.cover),
+      DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.transparent,
+              Colors.black.withValues(alpha: 0.08),
+            ],
           ),
-          const SizedBox(height: 14),
-          Text(
-            slide.body,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+        ),
       ),
-    ),
+    ],
   );
 }

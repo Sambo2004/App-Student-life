@@ -31,7 +31,7 @@ Use Profile to change personal appearance settings or reset local app data. Use 
 - Image Picker for profile images
 - Custom Flutter widgets and painting for charts and visual backgrounds
 
-The app currently has no backend, account system, cloud sync, or online database. It works offline and stores data in the device or browser's local storage.
+The app is intentionally offline-only. It has no backend, account system, cloud sync, online database, or required network connection. It stores data in the device or browser's local storage and should remain useful with Wi-Fi and mobile data disabled.
 
 ## Project Structure
 

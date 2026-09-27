@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../widgets/app_background.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/page_header.dart';
@@ -12,7 +13,7 @@ class AboutPage extends StatelessWidget {
     index: 5,
     child: Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('About Student Life Hub')),
+      appBar: AppBar(title: Text(context.tr('About Student Life Hub'))),
       body: AppBackground(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 32),
