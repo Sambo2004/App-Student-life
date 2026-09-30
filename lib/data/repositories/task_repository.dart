@@ -19,6 +19,7 @@ class TaskRepository {
     DateTime date,
     bool exam, {
     TaskPriority priority = TaskPriority.medium,
+    TaskRepeat repeat = TaskRepeat.none,
     String category = 'General',
     String notes = '',
   }) => _store.addTask(
@@ -26,6 +27,7 @@ class TaskRepository {
     date,
     exam,
     priority: priority,
+    repeat: repeat,
     category: category,
     notes: notes,
   );

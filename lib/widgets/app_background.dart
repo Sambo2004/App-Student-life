@@ -22,7 +22,8 @@ class AppBackground extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (backgroundImage != null)
+              if (backgroundImage != null &&
+                  AppSettings.instance.backgroundImageEnabled)
                 Positioned.fill(
                   child: Opacity(
                     opacity: isDark ? 0.10 : 0.18,

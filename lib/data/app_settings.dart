@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -18,10 +17,10 @@ class AppSettings extends GetxController {
   String get fontFamily => _fontFamily;
   double _fontScale = 1;
   double get fontScale => _fontScale.clamp(0.85, 1.15).toDouble();
-  Color _textColor = Colors.black87;
-  Color get textColor => _textColor;
   Uint8List? _backgroundImage;
   Uint8List? get backgroundImage => _backgroundImage;
+  bool _backgroundImageEnabled = true;
+  bool get backgroundImageEnabled => _backgroundImageEnabled;
   Uint8List? _profileImage;
   Uint8List? get profileImage => _profileImage;
   bool _onboardingComplete = false;
@@ -39,15 +38,17 @@ class AppSettings extends GetxController {
     _highContrast = preferences.getBool('highContrast') ?? false;
     _displayName = preferences.getString('displayName') ?? 'Student';
     _fontFamily = preferences.getString('fontFamily') ?? 'Default';
-    _fontScale = (preferences.getDouble('fontScale') ?? 1).clamp(0.85, 1.15);
-    final savedColor = preferences.getInt('textColor');
-    if (savedColor != null) _textColor = Color(savedColor);
+    _fontScale = (preferences.getDouble('fontScale') ?? 1)
+        .clamp(0.85, 1.15)
+        .toDouble();
     final savedBackgroundImage = preferences.getString('backgroundImage');
     if (savedBackgroundImage != null) {
-      _backgroundImage = base64Decode(savedBackgroundImage);
+      _backgroundImage = _decodeBytes(savedBackgroundImage);
     }
+    _backgroundImageEnabled =
+        preferences.getBool('backgroundImageEnabled') ?? true;
     final savedImage = preferences.getString('profileImage');
-    if (savedImage != null) _profileImage = base64Decode(savedImage);
+    if (savedImage != null) _profileImage = _decodeBytes(savedImage);
     _themeMode = switch (savedMode) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
@@ -99,33 +100,41 @@ class AppSettings extends GetxController {
   }
 
   Future<void> setFontScale(double scale) async {
-    _fontScale = scale.clamp(0.85, 1.15);
+    final safeScale = scale.clamp(0.85, 1.15).toDouble();
+    _fontScale = safeScale;
     update();
-    await (await SharedPreferences.getInstance()).setDouble('fontScale', scale);
-  }
-
-  Future<void> setTextColor(Color color) async {
-    _textColor = color;
-    update();
-    await (await SharedPreferences.getInstance()).setInt(
-      'textColor',
-      color.toARGB32(),
+    await (await SharedPreferences.getInstance()).setDouble(
+      'fontScale',
+      safeScale,
     );
   }
 
   Future<void> setBackgroundImage(Uint8List bytes) async {
     _backgroundImage = bytes;
+    _backgroundImageEnabled = true;
     update();
-    await (await SharedPreferences.getInstance()).setString(
-      'backgroundImage',
-      base64Encode(bytes),
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('backgroundImage', base64Encode(bytes));
+    await preferences.setBool('backgroundImageEnabled', true);
+  }
+
+  Future<void> setBackgroundImageEnabled(bool value) async {
+    if (_backgroundImage == null && value) return;
+    _backgroundImageEnabled = value;
+    update();
+    await (await SharedPreferences.getInstance()).setBool(
+      'backgroundImageEnabled',
+      value,
     );
   }
 
   Future<void> clearBackgroundImage() async {
     _backgroundImage = null;
+    _backgroundImageEnabled = true;
     update();
-    await (await SharedPreferences.getInstance()).remove('backgroundImage');
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove('backgroundImage');
+    await preferences.remove('backgroundImageEnabled');
   }
 
   Future<void> setProfileImage(Uint8List bytes) async {
@@ -153,8 +162,8 @@ class AppSettings extends GetxController {
       'displayName',
       'fontFamily',
       'fontScale',
-      'textColor',
       'backgroundImage',
+      'backgroundImageEnabled',
       'profileImage',
       'onboardingComplete',
       'languageCode',
@@ -166,12 +175,20 @@ class AppSettings extends GetxController {
     _displayName = 'Student';
     _fontFamily = 'Default';
     _fontScale = 1;
-    _textColor = Colors.black87;
     _backgroundImage = null;
+    _backgroundImageEnabled = true;
     _profileImage = null;
     _onboardingComplete = false;
     _languageCode = 'en';
     _highContrast = false;
     update();
+  }
+
+  Uint8List? _decodeBytes(String value) {
+    try {
+      return base64Decode(value);
+    } on FormatException {
+      return null;
+    }
   }
 }

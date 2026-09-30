@@ -55,6 +55,7 @@ class _TasksPageState extends State<TasksPage> {
     var dueDate = DateTime.now().add(const Duration(days: 1));
     var isExam = false;
     var priority = TaskPriority.medium;
+    var repeat = TaskRepeat.none;
 
     await showDialog<void>(
       context: context,
@@ -109,6 +110,21 @@ class _TasksPageState extends State<TasksPage> {
                     if (value != null) setDialogState(() => priority = value);
                   },
                 ),
+                DropdownButtonFormField<TaskRepeat>(
+                  initialValue: repeat,
+                  decoration: InputDecoration(labelText: context.tr('Repeat')),
+                  items: TaskRepeat.values
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(_repeatLabel(context, value)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => repeat = value);
+                  },
+                ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(context.tr('Due date')),
@@ -146,6 +162,7 @@ class _TasksPageState extends State<TasksPage> {
                   dueDate,
                   isExam,
                   priority: priority,
+                  repeat: repeat,
                   category: category.text,
                   notes: notes.text,
                 );
@@ -208,6 +225,7 @@ class _TasksPageState extends State<TasksPage> {
                     isExam: task.isExam,
                     done: task.done,
                     priority: task.priority,
+                    repeat: task.repeat,
                     category: task.category,
                     notes: task.notes,
                   ),
@@ -293,7 +311,7 @@ class _TasksPageState extends State<TasksPage> {
                                 ),
                               ),
                               subtitle: Text(
-                                '${task.isExam ? 'Exam' : 'Assignment'} - ${task.category} - ${_priorityLabel(task.priority)} - Due ${dateText(task.dueDate)}${task.notes.isEmpty ? '' : '\n${task.notes}'}',
+                                '${task.isExam ? 'Exam' : 'Assignment'} - ${task.category} - ${_priorityLabel(task.priority)}${task.repeat == TaskRepeat.none ? '' : ' - ${_repeatLabel(context, task.repeat)}'} - Due ${dateText(task.dueDate)}${task.notes.isEmpty ? '' : '\n${task.notes}'}',
                                 style: TextStyle(
                                   color: task.isOverdue
                                       ? Theme.of(context).colorScheme.error
@@ -326,6 +344,16 @@ class _TasksPageState extends State<TasksPage> {
 
 String _priorityLabel(TaskPriority priority) =>
     '${priority.name[0].toUpperCase()}${priority.name.substring(1)}';
+
+String _repeatLabel(BuildContext context, TaskRepeat repeat) =>
+    context.tr(
+      switch (repeat) {
+        TaskRepeat.none => 'Does not repeat',
+        TaskRepeat.daily => 'Daily',
+        TaskRepeat.weekly => 'Weekly',
+        TaskRepeat.monthly => 'Monthly',
+      },
+    );
 
 String dateText(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';

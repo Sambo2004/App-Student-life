@@ -6,6 +6,7 @@ import '../data/student_store.dart';
 import '../routes/app_routes.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/analytics_dashboard.dart';
+import '../widgets/depth_card.dart';
 import '../widgets/page_header.dart';
 import '../widgets/routine_chart.dart';
 
@@ -71,26 +72,46 @@ class HomePage extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _SummaryCard(
-                        icon: Icons.task_alt,
-                        label: 'Tasks done',
-                        value: '${store.completedTasks}/${store.tasks.length}',
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _SummaryCard(
-                        icon: Icons.wallet,
-                        label: 'Spent',
-                        value: 'USD ${store.totalExpenses.toStringAsFixed(2)}',
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                      ),
-                    ),
-                  ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final columns = constraints.maxWidth >= 620 ? 3 : 2;
+                    final width =
+                        (constraints.maxWidth - ((columns - 1) * 12)) /
+                        columns;
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        SizedBox(
+                          width: width,
+                          child: _SummaryCard(
+                            icon: Icons.task_alt,
+                            label: 'Tasks done',
+                            value: '${store.completedTasks}/${store.tasks.length}',
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: _SummaryCard(
+                            icon: Icons.wallet,
+                            label: 'Spent',
+                            value: 'USD ${store.totalExpenses.toStringAsFixed(2)}',
+                            color: Theme.of(context).colorScheme.secondaryContainer,
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: _SummaryCard(
+                            icon: Icons.fact_check_outlined,
+                            label: 'Attendance',
+                            value: '${(store.attendanceRate * 100).round()}%',
+                            color: Theme.of(context).colorScheme.tertiaryContainer,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               if (store.storageError != null)
@@ -120,10 +141,9 @@ class HomePage extends StatelessWidget {
                 ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
+                child: DepthCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
@@ -176,16 +196,14 @@ class HomePage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
                 ),
               ),
               AnalyticsDashboard(store: store),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
+                child: DepthCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
@@ -208,16 +226,14 @@ class HomePage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
                 ),
               ),
               const SizedBox(height: 24),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                    child: Column(
+                child: DepthCard(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
@@ -249,7 +265,6 @@ class HomePage extends StatelessWidget {
                         RoutineChart(tasks: store.tasks),
                       ],
                     ),
-                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -365,11 +380,10 @@ class _SummaryCard extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => DepthCard(
     color: color,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+    padding: const EdgeInsets.all(16),
+    child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon),
@@ -378,7 +392,6 @@ class _SummaryCard extends StatelessWidget {
           Text(label),
         ],
       ),
-    ),
   );
 }
 
@@ -466,6 +479,24 @@ class _StudentSearchDelegate extends SearchDelegate<void> {
           icon: Icons.wallet_outlined,
           searchText:
               '${expense.title} ${expense.category} ${expense.paymentMethod} ${expense.notes}',
+        ),
+      ),
+      ...store.grades.map(
+        (grade) => _SearchItem(
+          title: grade.course,
+          subtitle: '${grade.grade} - ${grade.credits} credits',
+          route: AppRoutes.grades,
+          icon: Icons.school_outlined,
+          searchText: '${grade.course} ${grade.grade}',
+        ),
+      ),
+      ...store.attendance.map(
+        (record) => _SearchItem(
+          title: record.course,
+          subtitle: '${record.status.name} - ${_dateText(record.date)}',
+          route: AppRoutes.attendance,
+          icon: Icons.fact_check_outlined,
+          searchText: '${record.course} ${record.status.name} ${record.note}',
         ),
       ),
     ];

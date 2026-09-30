@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
@@ -6,16 +8,39 @@ import 'package:go_router/go_router.dart';
 import 'data/app_settings.dart';
 import 'data/student_store.dart';
 import 'routes/app_routes.dart';
+import 'services/error_reporter.dart';
+import 'services/local_notification_service.dart';
 
-const _brandSeed = Color(0xFF0F6B78);
+const _brandSeed = Color(0xFF172B4D);
+const _lightAppBackground = Color(0xFFF6F8FC);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Future.wait([
-    AppSettings.instance.initialize(),
-    StudentStore.instance.initialize(),
-  ]);
+  await ErrorReporter.instance.initialize();
+  try {
+    await Future.wait([
+      AppSettings.instance.initialize(),
+      StudentStore.instance.initialize(),
+    ]).timeout(const Duration(seconds: 8));
+  } catch (error, stack) {
+    // Start with safe defaults if local storage is unavailable or slow.
+    await ErrorReporter.instance.record(error, stack);
+  }
   runApp(const StudentLifeApp());
+  unawaited(_initializeBackgroundServices());
+}
+
+Future<void> _initializeBackgroundServices() async {
+  try {
+    await LocalNotificationService.instance
+        .initialize()
+        .timeout(const Duration(seconds: 5));
+    await LocalNotificationService.instance
+        .syncTasks(StudentStore.instance.tasks)
+        .timeout(const Duration(seconds: 5));
+  } catch (_) {
+    // A notification plugin failure must not block the app UI.
+  }
 }
 
 class StudentLifeApp extends StatefulWidget {
@@ -44,30 +69,20 @@ class _StudentLifeAppState extends State<StudentLifeApp> {
           : settings.fontFamily == 'Default'
           ? null
           : settings.fontFamily;
-      final lightTextColor = settings.highContrast
-          ? Colors.black
-          : settings.textColor;
+      final lightTextColor = settings.highContrast ? Colors.black : Colors.black87;
       final lightScheme =
           ColorScheme.fromSeed(seedColor: _brandSeed).copyWith(
             onSurface: lightTextColor,
-            onSurfaceVariant: (settings.highContrast
-                    ? Colors.black
-                    : settings.textColor)
-                .withValues(alpha: 0.82),
+            onSurfaceVariant: lightTextColor.withValues(alpha: 0.82),
           );
-      final darkTextColor = settings.textColor == Colors.black87
-          ? Colors.white
-          : settings.textColor;
+      const darkTextColor = Colors.white;
       final darkScheme =
           ColorScheme.fromSeed(
             seedColor: _brandSeed,
             brightness: Brightness.dark,
           ).copyWith(
             onSurface: settings.highContrast ? Colors.white : darkTextColor,
-            onSurfaceVariant: (settings.highContrast
-                    ? Colors.white
-                    : darkTextColor)
-                .withValues(alpha: 0.82),
+            onSurfaceVariant: darkTextColor.withValues(alpha: 0.82),
           );
       return MaterialApp.router(
         title: 'Student Life Hub',
@@ -79,14 +94,84 @@ class _StudentLifeAppState extends State<StudentLifeApp> {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: lightScheme,
-          scaffoldBackgroundColor: Colors.white,
+          scaffoldBackgroundColor: _lightAppBackground,
+          cardTheme: CardThemeData(
+            clipBehavior: Clip.antiAlias,
+            elevation: 1,
+            shadowColor: const Color(0x1F172B4D),
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: ButtonStyle(
+              minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              ),
+              textStyle: WidgetStatePropertyAll(
+                TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.1),
+              ),
+              elevation: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.pressed) ? 0 : 1,
+              ),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              animationDuration: const Duration(milliseconds: 180),
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              side: BorderSide(color: lightScheme.outline),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          chipTheme: ChipThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            side: BorderSide.none,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          ),
+          dialogTheme: DialogThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            elevation: 12,
+          ),
+          snackBarTheme: SnackBarThemeData(
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            insetPadding: const EdgeInsets.all(16),
+          ),
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.transparent,
             elevation: 0,
             scrolledUnderElevation: 0,
           ),
           navigationBarTheme: NavigationBarThemeData(
-            backgroundColor: Colors.white.withValues(alpha: 0.96),
+            backgroundColor: _lightAppBackground.withValues(alpha: 0.96),
             indicatorColor: lightScheme.primaryContainer,
             height: 72,
             labelTextStyle: WidgetStatePropertyAll(
@@ -94,7 +179,7 @@ class _StudentLifeAppState extends State<StudentLifeApp> {
             ),
           ),
           navigationRailTheme: NavigationRailThemeData(
-            backgroundColor: Colors.white.withValues(alpha: 0.94),
+            backgroundColor: _lightAppBackground.withValues(alpha: 0.94),
             indicatorColor: lightScheme.primaryContainer,
             groupAlignment: -0.7,
           ),
@@ -136,6 +221,76 @@ class _StudentLifeAppState extends State<StudentLifeApp> {
           useMaterial3: true,
           colorScheme: darkScheme,
           scaffoldBackgroundColor: const Color(0xFF121212),
+          cardTheme: CardThemeData(
+            clipBehavior: Clip.antiAlias,
+            elevation: 1,
+            shadowColor: Colors.black54,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: ButtonStyle(
+              minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              ),
+              textStyle: const WidgetStatePropertyAll(
+                TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.1),
+              ),
+              elevation: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.pressed) ? 0 : 1,
+              ),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              animationDuration: const Duration(milliseconds: 180),
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              side: BorderSide(color: darkScheme.outline),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          chipTheme: ChipThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            side: BorderSide.none,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          ),
+          dialogTheme: DialogThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            elevation: 12,
+          ),
+          snackBarTheme: SnackBarThemeData(
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            insetPadding: const EdgeInsets.all(16),
+          ),
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -189,11 +344,20 @@ class _StudentLifeAppState extends State<StudentLifeApp> {
           ),
         ),
         themeMode: AppSettings.instance.themeMode,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(settings.fontScale)),
-          child: child!,
-        ),
+        builder: (context, child) {
+          final mediaQuery = MediaQuery.of(context);
+          // Preserve Android/iOS accessibility text size and apply the
+          // optional in-app adjustment on top of it.
+          final deviceScale = mediaQuery.textScaler.scale(1);
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              textScaler: TextScaler.linear(
+                deviceScale * settings.fontScale,
+              ),
+            ),
+            child: child!,
+          );
+        },
       );
     },
   );

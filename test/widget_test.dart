@@ -5,7 +5,7 @@ void main() {
   testWidgets('welcome page is visible', (tester) async {
     await tester.pumpWidget(const StudentLifeApp());
 
-    expect(find.text('Student Life\nHub'), findsOneWidget);
+    expect(find.text('Student Life Hub'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
   });
 }

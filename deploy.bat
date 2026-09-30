@@ -14,9 +14,9 @@ if errorlevel 1 goto :failed
 call flutter build web --release --no-pub
 if errorlevel 1 goto :failed
 
-if not exist "build\web\assets\assets\app_logo.webp" goto :missing_assets
-if not exist "build\web\assets\assets\start_page.gif" goto :missing_assets
+if not exist "build\web\assets\assets\founder.jpg" goto :missing_assets
 if not exist "build\web\assets\fonts\MaterialIcons-Regular.otf" goto :missing_assets
+if not exist "build\web\app_logo.webp" goto :missing_assets
 
 echo Uploading to Server...
 scp -r build\web\* %DEPLOY_USER%@%DEPLOY_HOST%:%DEPLOY_PATH%/

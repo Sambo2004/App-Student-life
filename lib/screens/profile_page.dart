@@ -19,15 +19,70 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
-  Future<void> _pickBackgroundImage(BuildContext context) async {
+  Future<void> _pickBackgroundImage(
+    BuildContext context, {
+    required _BackgroundImageSize size,
+  }) async {
     final file = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      maxWidth: 1600,
-      maxHeight: 1200,
-      imageQuality: 75,
+      maxWidth: size.maxWidth,
+      maxHeight: size.maxHeight,
+      imageQuality: size.quality,
     );
     if (file != null) {
-      await AppSettings.instance.setBackgroundImage(await file.readAsBytes());
+      final bytes = await file.readAsBytes();
+      if (bytes.length > 4 * 1024 * 1024 && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please choose a smaller image.')),
+        );
+        return;
+      }
+      await AppSettings.instance.setBackgroundImage(bytes);
+    }
+  }
+
+  Future<void> _editBackgroundImage(BuildContext context) async {
+    final size = await showModalBottomSheet<_BackgroundImageSize>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Choose image size',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'The image is resized before saving to keep the app fast and prevent storage problems.',
+              ),
+              const SizedBox(height: 12),
+              ..._BackgroundImageSize.values.map(
+                (option) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(option.icon),
+                  title: Text(option.label),
+                  subtitle: Text(option.description),
+                  onTap: () => Navigator.pop(sheetContext, option),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(sheetContext),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (size != null && context.mounted) {
+      await _pickBackgroundImage(context, size: size);
     }
   }
 
@@ -131,32 +186,134 @@ class ProfilePage extends StatelessWidget {
                     onTap: () => _showFontPicker(context),
                   ),
                   const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(
-                      Icons.format_color_text,
-                      color: settings.textColor,
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.42),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withValues(alpha: 0.45),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.wallpaper_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Background image',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    Text(
+                                      settings.backgroundImage == null
+                                          ? 'Optional personalization'
+                                          : settings.backgroundImageEnabled
+                                          ? 'Active behind your workspace'
+                                          : 'Saved but currently hidden',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (settings.backgroundImage != null)
+                                Switch(
+                                  value: settings.backgroundImageEnabled,
+                                  onChanged: AppSettings
+                                      .instance
+                                      .setBackgroundImageEnabled,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (settings.backgroundImage != null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Semantics(
+                                label: 'Current background image preview',
+                                image: true,
+                                child: SizedBox(
+                                  height: 140,
+                                  width: double.infinity,
+                                  child: Image.memory(
+                                    settings.backgroundImage!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => const Center(
+                                      child: Icon(Icons.broken_image_outlined),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              height: 92,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surface,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Center(
+                                child: Text('No custom image selected'),
+                              ),
+                            ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              FilledButton.tonalIcon(
+                                onPressed: () => _editBackgroundImage(context),
+                                icon: Icon(
+                                  settings.backgroundImage == null
+                                      ? Icons.add_photo_alternate_outlined
+                                      : Icons.edit_outlined,
+                                ),
+                                label: Text(
+                                  settings.backgroundImage == null
+                                      ? 'Add image'
+                                      : 'Replace / resize',
+                                ),
+                              ),
+                              if (settings.backgroundImage != null)
+                                OutlinedButton.icon(
+                                  onPressed: AppSettings
+                                      .instance
+                                      .clearBackgroundImage,
+                                  icon: const Icon(Icons.delete_outline),
+                                  label: const Text('Delete'),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    title: const Text('Text color'),
-                    subtitle: const Text('Change the reading color'),
-                    onTap: () => _showColorPicker(context),
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.wallpaper_outlined),
-                    title: const Text('Background image'),
-                    subtitle: Text(
-                      settings.backgroundImage == null
-                          ? 'Use your own image behind the app'
-                          : 'Custom image selected',
-                    ),
-                    onTap: () => _pickBackgroundImage(context),
-                  ),
-                  if (settings.backgroundImage != null)
-                    ListTile(
-                      leading: const Icon(Icons.delete_outline),
-                      title: const Text('Remove background image'),
-                      onTap: AppSettings.instance.clearBackgroundImage,
-                    ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.dark_mode_outlined),
@@ -223,10 +380,22 @@ class ProfilePage extends StatelessWidget {
                     onTap: () => context.push(AppRoutes.pomodoro),
                   ),
                   ListTile(
+                    leading: const Icon(Icons.auto_awesome_outlined),
+                    title: const Text('Student Life AI Assistant'),
+                    subtitle: const Text('Ask about your private offline data'),
+                    onTap: () => context.push(AppRoutes.assistant),
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.school_outlined),
                     title: Text(context.tr('Grades and GPA')),
                     subtitle: const Text('Track course results and GPA'),
                     onTap: () => context.push(AppRoutes.grades),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.fact_check_outlined),
+                    title: Text(context.tr('Attendance')),
+                    subtitle: const Text('Track attendance for every class'),
+                    onTap: () => context.push(AppRoutes.attendance),
                   ),
                   const Divider(height: 1),
                   ListTile(
@@ -304,39 +473,6 @@ class ProfilePage extends StatelessWidget {
                 ),
               )
               .toList(),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showColorPicker(BuildContext context) async {
-    const colors = [
-      Colors.black87,
-      Colors.blue,
-      Colors.teal,
-      Colors.deepOrange,
-      Colors.blueGrey,
-    ];
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Wrap(
-            spacing: 18,
-            children: colors
-                .map(
-                  (color) => IconButton(
-                    tooltip: 'Choose text color',
-                    icon: Icon(Icons.circle, color: color, size: 34),
-                    onPressed: () {
-                      AppSettings.instance.setTextColor(color);
-                      Navigator.pop(context);
-                    },
-                  ),
-                )
-                .toList(),
-          ),
         ),
       ),
     );
@@ -435,6 +571,49 @@ class ProfilePage extends StatelessWidget {
       );
     }
   }
+}
+
+enum _BackgroundImageSize {
+  small(
+    label: 'Small',
+    description: '1000 x 800 px - best for older phones',
+    maxWidth: 1000,
+    maxHeight: 800,
+    quality: 70,
+    icon: Icons.photo_size_select_small_outlined,
+  ),
+  medium(
+    label: 'Medium',
+    description: '1600 x 1200 px - recommended',
+    maxWidth: 1600,
+    maxHeight: 1200,
+    quality: 75,
+    icon: Icons.photo_outlined,
+  ),
+  large(
+    label: 'Large',
+    description: '2400 x 1800 px - higher detail',
+    maxWidth: 2400,
+    maxHeight: 1800,
+    quality: 80,
+    icon: Icons.photo_size_select_large_outlined,
+  );
+
+  const _BackgroundImageSize({
+    required this.label,
+    required this.description,
+    required this.maxWidth,
+    required this.maxHeight,
+    required this.quality,
+    required this.icon,
+  });
+
+  final String label;
+  final String description;
+  final double maxWidth;
+  final double maxHeight;
+  final int quality;
+  final IconData icon;
 }
 
 String _fontSizeLabel(double scale) {

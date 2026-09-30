@@ -38,6 +38,9 @@ dependencies:
   pdf: ^3.13.1
   shared_preferences: ^2.5.3
   share_plus: ^13.3.0
+  flutter_local_notifications: ^22.3.1
+  timezone: ^0.11.1
+  cryptography: ^2.9.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -66,13 +69,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/start_page.gif
-    - assets/app_logo.webp
-    - assets/welcome_page.png
-    - assets/welcome_clean_1.png
-    - assets/welcome_clean_2.png
-    - assets/welcome_clean_3.png
-    - assets/welcome_clean_4.png
+    - assets/founder.jpg
   fonts:
     - family: KhmerUI
       fonts:

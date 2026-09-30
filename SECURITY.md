@@ -15,6 +15,8 @@ backup files, avoiding secrets in source control, and securing web hosting.
 ## Current Protections
 
 - Backup imports reject oversized files and malformed records before changing data.
+- Encrypted backups use password-derived Argon2id keys with authenticated AES-256-GCM.
+- Runtime failures are recorded only as a local last-error diagnostic; no records are uploaded.
 - Invalid backups do not silently overwrite existing data.
 - Deployment host, user, and path are supplied through environment variables.
 - Secret-like files are ignored by Git.

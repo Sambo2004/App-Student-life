@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../data/app_settings.dart';
 import '../screens/about_page.dart';
+import '../screens/assistant_page.dart';
+import '../screens/attendance_page.dart';
 import '../screens/events_page.dart';
 import '../screens/expenses_page.dart';
 import '../screens/home_page.dart';
@@ -34,6 +36,8 @@ abstract final class AppRoutes {
   static const weeklyReport = '/weekly-report';
   static const studyStreak = '/study-streak';
   static const backupRestore = '/backup-restore';
+  static const attendance = '/attendance';
+  static const assistant = '/assistant';
 
   static GoRouter createRouter() {
     return GoRouter(
@@ -106,6 +110,14 @@ abstract final class AppRoutes {
           path: backupRestore,
           pageBuilder: (_, state) => _page(state, const BackupRestorePage()),
         ),
+        GoRoute(
+          path: attendance,
+          pageBuilder: (_, state) => _page(state, const AttendancePage()),
+        ),
+        GoRoute(
+          path: assistant,
+          pageBuilder: (_, state) => _page(state, const AssistantPage()),
+        ),
       ],
       errorBuilder: (_, state) =>
           Scaffold(body: Center(child: Text('Page not found: ${state.uri}'))),
@@ -114,7 +126,9 @@ abstract final class AppRoutes {
 
   static CustomTransitionPage<void> _page(GoRouterState state, Widget child) {
     return CustomTransitionPage<void>(
-      key: state.pageKey,
+      // Include query parameters so an active-tab tap can request a fresh
+      // page state and reset its scroll position.
+      key: ValueKey(state.uri.toString()),
       child: child,
       transitionDuration: const Duration(milliseconds: 220),
       reverseTransitionDuration: const Duration(milliseconds: 160),

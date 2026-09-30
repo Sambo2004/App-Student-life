@@ -4,7 +4,47 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/local_notification_service.dart';
+
+const _storageVersion = 2;
+const _backupVersion = 2;
+
 enum TaskPriority { low, medium, high }
+enum TaskRepeat { none, daily, weekly, monthly }
+
+enum AttendanceStatus { present, absent, late, excused }
+
+class AttendanceRecord {
+  AttendanceRecord({
+    required this.course,
+    required this.date,
+    required this.status,
+    this.note = '',
+  });
+
+  final String course;
+  final DateTime date;
+  final AttendanceStatus status;
+  final String note;
+
+  Map<String, Object> toJson() => {
+    'course': course,
+    'date': date.toIso8601String(),
+    'status': status.name,
+    'note': note,
+  };
+
+  static AttendanceRecord fromJson(Map<String, dynamic> json) =>
+      AttendanceRecord(
+        course: json['course'] as String,
+        date: DateTime.parse(json['date'] as String),
+        status: AttendanceStatus.values.firstWhere(
+          (value) => value.name == json['status'],
+          orElse: () => AttendanceStatus.present,
+        ),
+        note: json['note'] as String? ?? '',
+      );
+}
 
 class StudentTask {
   StudentTask({
@@ -13,6 +53,7 @@ class StudentTask {
     this.isExam = false,
     this.done = false,
     this.priority = TaskPriority.medium,
+    this.repeat = TaskRepeat.none,
     this.category = 'General',
     this.notes = '',
   });
@@ -21,6 +62,7 @@ class StudentTask {
   final bool isExam;
   bool done;
   TaskPriority priority;
+  TaskRepeat repeat;
   final String category;
   final String notes;
 
@@ -32,6 +74,7 @@ class StudentTask {
     'isExam': isExam,
     'done': done,
     'priority': priority.name,
+    'repeat': repeat.name,
     'category': category,
     'notes': notes,
   };
@@ -44,6 +87,10 @@ class StudentTask {
     priority: TaskPriority.values.firstWhere(
       (value) => value.name == json['priority'],
       orElse: () => TaskPriority.medium,
+    ),
+    repeat: TaskRepeat.values.firstWhere(
+      (value) => value.name == json['repeat'],
+      orElse: () => TaskRepeat.none,
     ),
     category: json['category'] as String? ?? 'General',
     notes: json['notes'] as String? ?? '',
@@ -179,7 +226,7 @@ class CourseGrade {
   static CourseGrade fromJson(Map<String, dynamic> json) => CourseGrade(
     course: json['course'] as String,
     credits: (json['credits'] as num).toDouble(),
-    grade: json['grade'] as String,
+    grade: _normalizeGrade(json['grade'] as String?),
   );
 }
 
@@ -194,6 +241,10 @@ class StudentStore extends GetxController {
   Future<void> initialize() async {
     if (_initialized) return;
     final preferences = await SharedPreferences.getInstance();
+    final savedVersion = preferences.getInt('storageVersion');
+    if (savedVersion == null || savedVersion < _storageVersion) {
+      await preferences.setInt('storageVersion', _storageVersion);
+    }
     final savedCompletionDays = preferences.getStringList('completionDays');
     if (savedCompletionDays != null) completedDays.addAll(savedCompletionDays);
     tasks
@@ -208,6 +259,11 @@ class StudentStore extends GetxController {
     events
       ..clear()
       ..addAll(_loadList(preferences, 'events', CampusEvent.fromJson));
+    attendance
+      ..clear()
+      ..addAll(
+        _loadList(preferences, 'attendance', AttendanceRecord.fromJson),
+      );
     grades
       ..clear()
       ..addAll(_loadList(preferences, 'grades', CourseGrade.fromJson));
@@ -219,12 +275,24 @@ class StudentStore extends GetxController {
   final expenses = <StudentExpense>[];
   final schedule = <ClassSchedule>[];
   final events = <CampusEvent>[];
+  final attendance = <AttendanceRecord>[];
   final grades = <CourseGrade>[];
   final completedDays = <String>{};
 
   int get completedTasks => tasks.where((task) => task.done).length;
   double get totalExpenses =>
       expenses.fold<double>(0, (total, item) => total + item.amount);
+  double get attendanceRate {
+    if (attendance.isEmpty) return 0;
+    final attended = attendance
+        .where(
+          (item) =>
+              item.status == AttendanceStatus.present ||
+              item.status == AttendanceStatus.late,
+        )
+        .length;
+    return attended / attendance.length;
+  }
   double get gpa {
     final credits = grades.fold<double>(0, (total, item) => total + item.credits);
     if (credits == 0) return 0;
@@ -247,6 +315,7 @@ class StudentStore extends GetxController {
     DateTime date,
     bool exam, {
     TaskPriority priority = TaskPriority.medium,
+    TaskRepeat repeat = TaskRepeat.none,
     String category = 'General',
     String notes = '',
   }) {
@@ -257,17 +326,20 @@ class StudentStore extends GetxController {
         dueDate: date,
         isExam: exam,
         priority: priority,
+        repeat: repeat,
         category: category,
         notes: notes.trim(),
       ),
     );
     _save();
+    _syncTaskReminders();
     update();
   }
 
   void deleteTask(StudentTask task) {
     tasks.remove(task);
     _save();
+    _syncTaskReminders();
     update();
   }
 
@@ -276,12 +348,14 @@ class StudentStore extends GetxController {
     if (index < 0) return;
     tasks[index] = updated;
     _save();
+    _syncTaskReminders();
     update();
   }
 
   void restoreTask(StudentTask task) {
     tasks.add(task);
     _save();
+    _syncTaskReminders();
     update();
   }
 
@@ -351,6 +425,32 @@ class StudentStore extends GetxController {
     update();
   }
 
+  void addAttendance(
+    String course,
+    DateTime date,
+    AttendanceStatus status, {
+    String note = '',
+  }) {
+    if (course.trim().isEmpty) return;
+    attendance.insert(
+      0,
+      AttendanceRecord(
+        course: course.trim(),
+        date: date,
+        status: status,
+        note: note.trim(),
+      ),
+    );
+    _save();
+    update();
+  }
+
+  void deleteAttendance(AttendanceRecord record) {
+    attendance.remove(record);
+    _save();
+    update();
+  }
+
   void updateEvent(CampusEvent original, CampusEvent updated) {
     final index = events.indexOf(original);
     if (index < 0) return;
@@ -371,21 +471,32 @@ class StudentStore extends GetxController {
     expenses.clear();
     schedule.clear();
     events.clear();
+    attendance.clear();
     grades.clear();
     completedDays.clear();
-    for (final key in ['tasks', 'expenses', 'schedule', 'events', 'grades']) {
+    for (final key in [
+      'tasks',
+      'expenses',
+      'schedule',
+      'events',
+      'attendance',
+      'grades',
+      'completionDays',
+    ]) {
       await preferences.remove(key);
     }
+    _syncTaskReminders();
     update();
   }
 
   String exportBackup() => jsonEncode({
-    'version': 1,
+    'version': _backupVersion,
     'exportedAt': DateTime.now().toIso8601String(),
     'tasks': tasks.map((task) => task.toJson()).toList(),
     'expenses': expenses.map((expense) => expense.toJson()).toList(),
     'schedule': schedule.map((item) => item.toJson()).toList(),
     'events': events.map((event) => event.toJson()).toList(),
+    'attendance': attendance.map((item) => item.toJson()).toList(),
     'grades': grades.map((grade) => grade.toJson()).toList(),
     'completionDays': completedDays.toList(),
   });
@@ -396,7 +507,11 @@ class StudentStore extends GetxController {
     }
 
     final decoded = jsonDecode(source);
-    if (decoded is! Map<String, dynamic> || decoded['version'] != 1) {
+    final version = decoded is Map<String, dynamic> ? decoded['version'] : null;
+    if (decoded is! Map<String, dynamic> ||
+        version is! int ||
+        version < 1 ||
+        version > _backupVersion) {
       throw const FormatException('Unsupported backup format.');
     }
 
@@ -416,6 +531,10 @@ class StudentStore extends GetxController {
       decoded['events'],
       (item) => CampusEvent.fromJson(item),
     );
+    final importedAttendance = _decodeList(
+      decoded['attendance'] ?? [],
+      (item) => AttendanceRecord.fromJson(item),
+    );
     final importedGrades = _decodeList(
       decoded['grades'] ?? [],
       (item) => CourseGrade.fromJson(item),
@@ -433,6 +552,9 @@ class StudentStore extends GetxController {
     events
       ..clear()
       ..addAll(importedEvents);
+    attendance
+      ..clear()
+      ..addAll(importedAttendance);
     grades
       ..clear()
       ..addAll(importedGrades);
@@ -442,16 +564,26 @@ class StudentStore extends GetxController {
         (decoded['completionDays'] as List<dynamic>? ?? []).cast<String>(),
       );
     await _save();
+    _syncTaskReminders();
     update();
   }
 
   void toggleTask(StudentTask task, bool value) {
+    final wasDone = task.done;
     task.done = value;
-    if (value) {
+    if (value && !wasDone) {
       completedDays.add(_dayKey(DateTime.now()));
+      if (task.repeat != TaskRepeat.none) {
+        tasks.add(_nextRecurringTask(task));
+      }
     }
     _save();
+    _syncTaskReminders();
     update();
+  }
+
+  void _syncTaskReminders() {
+    LocalNotificationService.instance.syncTasks(tasks);
   }
 
   void addExpense(
@@ -498,11 +630,18 @@ class StudentStore extends GetxController {
   }
 
   void addGrade(String course, double credits, String grade) {
-    if (course.trim().isEmpty || credits <= 0 || !'ABCDF'.contains(grade)) {
+    final normalizedGrade = _normalizeGrade(grade);
+    if (course.trim().isEmpty ||
+        credits <= 0 ||
+        normalizedGrade != grade.trim().toUpperCase()) {
       return;
     }
     grades.add(
-      CourseGrade(course: course.trim(), credits: credits, grade: grade),
+      CourseGrade(
+        course: course.trim(),
+        credits: credits,
+        grade: normalizedGrade,
+      ),
     );
     _save();
     update();
@@ -534,6 +673,10 @@ class StudentStore extends GetxController {
         jsonEncode(events.map((event) => event.toJson()).toList()),
       );
       await preferences.setString(
+        'attendance',
+        jsonEncode(attendance.map((item) => item.toJson()).toList()),
+      );
+      await preferences.setString(
         'grades',
         jsonEncode(grades.map((grade) => grade.toJson()).toList()),
       );
@@ -557,10 +700,21 @@ List<T> _loadList<T>(
   try {
     final decoded = jsonDecode(raw);
     if (decoded is! List) throw const FormatException('Expected a list.');
-    return decoded.map((item) {
-      if (item is! Map) throw const FormatException('Invalid record.');
-      return decoder(Map<String, dynamic>.from(item));
-    }).toList();
+    final validRecords = <T>[];
+    var skippedRecord = false;
+    for (final item in decoded) {
+      try {
+        if (item is! Map) throw const FormatException('Invalid record.');
+        validRecords.add(decoder(Map<String, dynamic>.from(item)));
+      } catch (_) {
+        skippedRecord = true;
+      }
+    }
+    if (skippedRecord) {
+      StudentStore.instance._storageError ??=
+          'Some saved items were damaged and were skipped safely.';
+    }
+    return validRecords;
   } catch (_) {
     StudentStore.instance._storageError ??=
         'Some saved data could not be read. New data was kept safe.';
@@ -583,3 +737,46 @@ List<T> _decodeList<T>(
 
 String _dayKey(DateTime date) =>
     '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+StudentTask _nextRecurringTask(StudentTask task) {
+  var nextDate = switch (task.repeat) {
+    TaskRepeat.daily => task.dueDate.add(const Duration(days: 1)),
+    TaskRepeat.weekly => task.dueDate.add(const Duration(days: 7)),
+    TaskRepeat.monthly => _addMonth(task.dueDate),
+    TaskRepeat.none => task.dueDate,
+  };
+  while (!nextDate.isAfter(DateTime.now())) {
+    nextDate = switch (task.repeat) {
+      TaskRepeat.daily => nextDate.add(const Duration(days: 1)),
+      TaskRepeat.weekly => nextDate.add(const Duration(days: 7)),
+      TaskRepeat.monthly => _addMonth(nextDate),
+      TaskRepeat.none => nextDate,
+    };
+  }
+  return StudentTask(
+    title: task.title,
+    dueDate: nextDate,
+    isExam: task.isExam,
+    priority: task.priority,
+    repeat: task.repeat,
+    category: task.category,
+    notes: task.notes,
+  );
+}
+
+DateTime _addMonth(DateTime date) {
+  final targetMonth = date.month + 1;
+  final lastDay = DateTime(date.year, targetMonth + 1, 0).day;
+  return DateTime(
+    date.year,
+    targetMonth,
+    date.day > lastDay ? lastDay : date.day,
+    date.hour,
+    date.minute,
+  );
+}
+
+String _normalizeGrade(String? value) {
+  final normalized = value?.trim().toUpperCase();
+  return const {'A', 'B', 'C', 'D', 'F'}.contains(normalized) ? normalized! : 'F';
+}
